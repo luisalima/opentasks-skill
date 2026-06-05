@@ -43,7 +43,7 @@ Then invoke with `/tasks` in any Claude Code session.
 
 After installing the skill, run `/tasks bootstrap` in your project. This:
 1. Creates `docs/tasks/` with a `README.md` and empty `TASK_INDEX.md`.
-2. Appends a standing instruction block to `CLAUDE.md` (and `AGENTS.md` if present) that tells the agent to always use this system when planning or tracking work.
+2. Appends a standing instruction block to `AGENTS.md` (and `CLAUDE.md` if present) that tells the agent to always use this system when planning or tracking work.
 
 The appended block looks like this:
 

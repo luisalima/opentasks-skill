@@ -22,7 +22,7 @@ Set up a fresh `docs/tasks/` folder in a new project.
 3. Create `docs/tasks/README.md` — a human-readable conventions doc. See **§README** below for required content.
 4. Create `docs/tasks/TASK_INDEX.md` — empty index with group headers for each deliverable + Open questions section. See **§INDEX** below for format.
 5. Do NOT create any tasks or questions yet.
-6. Append the following block to `CLAUDE.md` (create it if absent). If `AGENTS.md` exists, append the same block there too.
+6. Append the following block to `AGENTS.md` (create it if absent). If `CLAUDE.md` exists, append the same block there too.
 
 ```markdown
 ## Task and question tracking
