@@ -39,6 +39,26 @@ Then invoke with `/tasks` in any Claude Code session.
 
 ---
 
+## Setup
+
+After installing the skill, run `/tasks bootstrap` in your project. This:
+1. Creates `docs/tasks/` with a `README.md` and empty `TASK_INDEX.md`.
+2. Appends a standing instruction block to `CLAUDE.md` (and `AGENTS.md` if present) that tells the agent to always use this system when planning or tracking work.
+
+The appended block looks like this:
+
+```markdown
+## Task and question tracking
+
+This project uses `docs/tasks/` to track work items and open decisions. Use the `/tasks` skill to manage it.
+
+- When planning or breaking down work, record concrete steps as tasks and open decisions as questions.
+- Keep status current: mark items `doing` when you start, `blocked` when waiting, `done` when complete.
+- Never create task or question files manually — always go through `/tasks` to keep the index in sync.
+```
+
+---
+
 ## How it works
 
 ### Folder layout

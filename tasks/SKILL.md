@@ -22,6 +22,17 @@ Set up a fresh `docs/tasks/` folder in a new project.
 3. Create `docs/tasks/README.md` — a human-readable conventions doc. See **§README** below for required content.
 4. Create `docs/tasks/TASK_INDEX.md` — empty index with group headers for each deliverable + Open questions section. See **§INDEX** below for format.
 5. Do NOT create any tasks or questions yet.
+6. Append the following block to `CLAUDE.md` (create it if absent). If `AGENTS.md` exists, append the same block there too.
+
+```markdown
+## Task and question tracking
+
+This project uses `docs/tasks/` to track work items and open decisions. Use the `/tasks` skill to manage it.
+
+- When planning or breaking down work, record concrete steps as tasks (`/tasks new task <title>`) and open decisions as questions (`/tasks new question <title>`).
+- Keep status current: mark items `doing` when you start, `blocked` when waiting, `done` when complete.
+- Never create task or question files manually — always go through `/tasks` to keep the index in sync.
+```
 
 ---
 
