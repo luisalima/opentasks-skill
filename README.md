@@ -1,6 +1,6 @@
 # opentasks-skill
 
-A [Claude Code](https://claude.ai/code) skill that manages a lightweight, file-based task tracking system for small and medium projects — a flat folder of markdown files, no Jira/Linear required.
+An Agent Skills-compatible skill for Codex and Claude Code that manages a lightweight, file-based task tracking system for small and medium projects — a flat folder of markdown files, no Jira/Linear required.
 
 The system tracks both **work items** and **open questions** in `docs/tasks/` using markdown + YAML frontmatter. The `type` field distinguishes tasks from questions, frontmatter is the source of truth, and the index is a derived view.
 
