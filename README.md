@@ -1,60 +1,74 @@
-# the-tasks-folder-skill
+# opentasks-skill
 
 A [Claude Code](https://claude.ai/code) skill that manages a lightweight, file-based task tracking system for small and medium projects — a flat folder of markdown files, no Jira/Linear required.
 
-The system tracks both **work items** and **open questions** in `docs/tasks/` using markdown + YAML frontmatter. Frontmatter is the source of truth; the index is a derived view.
+The system tracks both **work items** and **open questions** in `docs/tasks/` using markdown + YAML frontmatter. The `type` field distinguishes tasks from questions, frontmatter is the source of truth, and the index is a derived view.
 
 ---
 
 ## Installation
 
-### Global (available in all projects)
+### Codex
 
 ```bash
-git clone https://github.com/luisalima/the-tasks-folder-skill ~/.claude/skills/tasks
+git clone https://github.com/luisalima/opentasks-skill ~/.codex/skills/opentasks
 ```
 
-### Project-level (this project only)
+Restart Codex after installing so the skill loader picks it up.
+
+### Claude Code global
 
 ```bash
-git clone https://github.com/luisalima/the-tasks-folder-skill .claude/skills/tasks
+git clone https://github.com/luisalima/opentasks-skill ~/.claude/skills/opentasks
 ```
 
-Then invoke with `/tasks` in any Claude Code session.
+### Claude Code project-level
+
+```bash
+git clone https://github.com/luisalima/opentasks-skill .claude/skills/opentasks
+```
+
+Then invoke with `/opentasks`.
+
+The repository root contains `SKILL.md`, so the clone target directory name (`opentasks`) is the command name.
 
 ---
 
 ## Usage
 
 ```
-/tasks bootstrap              Set up docs/tasks/ in a new project
-/tasks new task <title>       Create a new task
-/tasks new question <title>   Create a new question
-/tasks start <slug>           Mark a task as in progress
-/tasks block <slug> [reason]  Mark an item as blocked
-/tasks done <slug>            Close an item (task or question)
-/tasks sync                   Rebuild TASK_INDEX.md from frontmatter
-/tasks status                 Show open/blocked items (default)
+/opentasks bootstrap              Set up docs/tasks/ in a new project
+/opentasks new task <title>       Create a new task
+/opentasks new question <title>   Create a new question
+/opentasks start <item>           Mark a task as in progress
+/opentasks block <item> [reason]  Mark an item as blocked
+/opentasks done <item>            Close an item (task or question)
+/opentasks reopen <item>          Reopen a closed item
+/opentasks list [filter]          List items by status, deliverable, or questions
+/opentasks sync                   Rebuild TASK_INDEX.md from frontmatter
+/opentasks status                 Show open/blocked items (default)
 ```
+
+`<item>` can be a slug, filename, `Q<N>` shorthand like `Q3`, or an exact title match. Common aliases such as `close Q3`, `mark done`, `add task`, and `open question` resolve to the canonical operations.
 
 ---
 
 ## Setup
 
-After installing the skill, run `/tasks bootstrap` in your project. This:
+After installing the skill, run `/opentasks bootstrap` in your project. This:
 1. Creates `docs/tasks/` with a `README.md` and empty `TASK_INDEX.md`.
-2. Appends a standing instruction block to `AGENTS.md` (and `CLAUDE.md` if present) that tells the agent to always use this system when planning or tracking work.
+2. Appends a standing instruction block to `AGENTS.md` (and `CLAUDE.md` if present) when that section is not already present.
 
 The appended block looks like this:
 
 ```markdown
 ## Task and question tracking
 
-This project uses `docs/tasks/` to track work items and open decisions. Use the `/tasks` skill to manage it.
+This project uses `docs/tasks/` to track work items and open decisions. Use the `/opentasks` skill to manage it.
 
-- When planning or breaking down work, record concrete steps as tasks and open decisions as questions.
+- When planning or breaking down work, record concrete steps as tasks (`/opentasks new task <title>`) and open decisions as questions (`/opentasks new question <title>`).
 - Keep status current: mark items `doing` when you start, `blocked` when waiting, `done` when complete.
-- Never create task or question files manually — always go through `/tasks` to keep the index in sync.
+- Never create task or question files manually — always go through `/opentasks` to keep the index in sync.
 ```
 
 ---
@@ -79,9 +93,11 @@ Flat — no subfolders. One file per item. Closed items stay as history; never d
 ```yaml
 ---
 status: todo            # todo | doing | blocked | done
+type: task
 deliverable: D2         # project-specific bucket
 created: YYYY-MM-DD
-closed: YYYY-MM-DD      # only when done
+started: YYYY-MM-DD     # added by start; kept on reopen
+closed: YYYY-MM-DD      # only when done; removed on reopen
 output: path/to/file.md # only if the task produced an artifact
 ---
 ```
@@ -102,7 +118,7 @@ closed: YYYY-MM-DD      # only when done
 | Status    | Tasks                   | Questions              |
 |-----------|-------------------------|------------------------|
 | `todo`    | Not started             | Ready to ask           |
-| `doing`   | In progress             | —                      |
+| `doing`   | In progress             | Not valid              |
 | `blocked` | Waiting on dependency   | Waiting for an answer  |
 | `done`    | Completed               | Answered               |
 

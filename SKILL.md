@@ -1,9 +1,11 @@
 ---
-description: Manage the docs/tasks/ flat file tracking system — bootstrap the folder, create tasks/questions, update status, close items, sync the index. Trigger phrases: "create a task for X", "open a question about Y", "close Q3", "mark done", "set up the tasks folder", "show open tasks", "add a question about Y".
-argument-hint: [bootstrap | new task <title> | new question <title> | start <slug> | block <slug> | done <slug> | reopen <slug> | list [filter] | sync | status]
+name: opentasks
+description: "Manage a docs/tasks/ flat-file tracking system: bootstrap the folder, create tasks/questions, update status, close or reopen items, list open work, and rebuild the index."
+when_to_use: "Use when the user asks to set up a tasks folder, create a task, open a question, close or mark done, mark blocked/doing, reopen an item, show open tasks, list questions, or sync a task index. Trigger phrases include: create a task for X; open a question about Y; close Q3; mark done; set up the tasks folder; show open tasks; add a question about Y."
+argument-hint: "[bootstrap | new task <title> | new question <title> | start <item> | block <item> [reason] | done <item> | reopen <item> | list [filter] | sync | status]"
 ---
 
-# /tasks — docs/tasks/ folder manager
+# /opentasks — docs/tasks/ folder manager
 
 You are managing the `docs/tasks/` flat file tracking system. The argument you received is:
 
@@ -11,13 +13,27 @@ You are managing the `docs/tasks/` flat file tracking system. The argument you r
 
 Parse the intent and execute the appropriate operation below. If the argument is empty or ambiguous, run **status**.
 
+Accept common aliases:
+- `init` → `bootstrap`
+- `create task`, `add task`, `task` → `new task`
+- `open question`, `add question`, `question` → `new question`
+- `close`, `finish`, `complete`, `mark done` → `done`
+
+Where an operation accepts `<item>`, resolve it before editing:
+1. Exact filename under `docs/tasks/`, with optional `.md`.
+2. Exact slug, meaning filename without `.md`.
+3. Question shorthand `Q<N>` / `q<N>` → the unique `q<N>-*.md` file.
+4. Exact case-insensitive title match from the file heading or index line.
+
+If resolution finds no item, stop and tell the user what was searched. If it finds multiple items, stop and ask for the exact slug.
+
 ---
 
 ## Folder guard
 
 Before executing any operation other than `bootstrap` / `init`, check whether `docs/tasks/` exists. If it does not, stop and tell the user:
 
-> No `docs/tasks/` folder found. Run `/tasks bootstrap` to set up the system first.
+> No `docs/tasks/` folder found. Run `/opentasks bootstrap` to set up the system first.
 
 ---
 
@@ -30,16 +46,16 @@ Set up a fresh `docs/tasks/` folder in a new project.
 3. Create `docs/tasks/README.md` — a human-readable conventions doc. See **§README** below for required content.
 4. Create `docs/tasks/TASK_INDEX.md` — empty index with group headers for each deliverable + Open questions section. See **§INDEX** below for format.
 5. Do NOT create any tasks or questions yet.
-6. Append the following block to `AGENTS.md` (create it if absent). If `CLAUDE.md` exists and does not already contain a `## Task and question tracking` section, append the same block there too.
+6. Append the following block to `AGENTS.md` (create it if absent) only if it does not already contain a `## Task and question tracking` section. If `CLAUDE.md` exists and does not already contain that section, append the same block there too.
 
 ```markdown
 ## Task and question tracking
 
-This project uses `docs/tasks/` to track work items and open decisions. Use the `/tasks` skill to manage it.
+This project uses `docs/tasks/` to track work items and open decisions. Use the `/opentasks` skill to manage it.
 
-- When planning or breaking down work, record concrete steps as tasks (`/tasks new task <title>`) and open decisions as questions (`/tasks new question <title>`).
+- When planning or breaking down work, record concrete steps as tasks (`/opentasks new task <title>`) and open decisions as questions (`/opentasks new question <title>`).
 - Keep status current: mark items `doing` when you start, `blocked` when waiting, `done` when complete.
-- Never create task or question files manually — always go through `/tasks` to keep the index in sync.
+- Never create task or question files manually — always go through `/opentasks` to keep the index in sync.
 ```
 
 ---
@@ -47,13 +63,14 @@ This project uses `docs/tasks/` to track work items and open decisions. Use the 
 ### `new task <title>`
 Create a new task file.
 1. Generate a kebab-case slug from the title (ASCII, lowercase, hyphens; strip accents, replace spaces with hyphens).
-2. If `docs/tasks/<slug>.md` already exists, abort and tell the user the file exists — suggest they pick a different title or run `/tasks status` to see the existing item.
+2. If `docs/tasks/<slug>.md` already exists, abort and tell the user the file exists — suggest they pick a different title or run `/opentasks status` to see the existing item.
 3. Determine the deliverable bucket from context or ask the user.
 4. Write `docs/tasks/<slug>.md` with this exact structure:
 
 ```markdown
 ---
 status: todo
+type: task
 deliverable: <D1|D2|ops|…>
 created: <YYYY-MM-DD>
 ---
@@ -107,29 +124,33 @@ created: <YYYY-MM-DD>
 
 ---
 
-### `start <slug>`
-1. Open `docs/tasks/<slug>.md`.
-2. If the file has `type: question` in frontmatter, abort and tell the user: questions don't use `doing` status — use `/tasks block` to flag as waiting, or `/tasks done` to record the answer.
-3. Change `status: todo` → `status: doing` in frontmatter.
-4. Add `started: <YYYY-MM-DD>` to frontmatter (directly after `status`).
-5. Update the index line: replace the current status tag with `` `doing` ``.
+### `start <item>`
+1. Resolve `<item>` and open the matching file.
+2. If the file has `type: question` in frontmatter, abort and tell the user: questions don't use `doing` status — use `/opentasks block` to flag as waiting, or `/opentasks done` to record the answer.
+3. If `status: done`, abort and tell the user to run `/opentasks reopen <item>` first.
+4. Change `status: todo` or `status: blocked` → `status: doing` in frontmatter. If it is already `doing`, leave it as-is.
+5. Add `started: <YYYY-MM-DD>` to frontmatter directly after `status` if absent. Do not duplicate or overwrite an existing `started:`.
+6. If a `## Blocker` section is present and the blocker is no longer relevant, remove it or add a short resolved note.
+7. Update the index line: replace the current status tag with `` `doing` `` and remove any `(waiting on ...)` suffix.
 
 ---
 
-### `block <slug> [reason]`
-1. Open `docs/tasks/<slug>.md`.
-2. Change status → `status: blocked` in frontmatter.
-3. Add or update a `## Blocker` section in the body explaining what's being waited on.
-4. Update the index line: replace the current status tag with `` `blocked` `` and append `(waiting on <reason>)` if a reason was given.
+### `block <item> [reason]`
+1. Resolve `<item>` and open the matching file.
+2. If `status: done`, abort and tell the user to run `/opentasks reopen <item>` first.
+3. Change status → `status: blocked` in frontmatter. If it is already `blocked`, leave it as-is.
+4. Add or update a single `## Blocker` section in the body explaining what's being waited on. If no reason was provided and it is not obvious from context, ask for the blocker.
+5. Update the index line: replace the current status tag with `` `blocked` `` and append `(waiting on <reason>)` if a reason was given.
 
 ---
 
-### `done <slug>`
-1. Open `docs/tasks/<slug>.md`.
-2. Set `status: done`, add `closed: <YYYY-MM-DD>` to frontmatter.
-3. **If it's a question:** add the answer inline in the body with date and source (do NOT replace the question text).
-4. **If it's a task that produced a tracked artifact:** add `output: <path>` to frontmatter. Omit `output:` entirely if the task produced no tracked artifact.
-5. In `TASK_INDEX.md`:
+### `done <item>`
+1. Resolve `<item>` and open the matching file.
+2. If the item is already `done`, leave existing answer/output/closed fields unchanged unless the user explicitly asks to correct them, then skip to the `TASK_INDEX.md` update.
+3. Otherwise set `status: done`, add `closed: <YYYY-MM-DD>` to frontmatter if absent, and do not duplicate an existing `closed:`.
+4. **If it's a question:** add the answer inline in the body with date and source (do NOT replace the question text). If the answer is not clear from context, ask for it before closing.
+5. **If it's a task that produced a tracked artifact:** add or update `output: <path>` in frontmatter. Omit `output:` entirely if the task produced no tracked artifact.
+6. In `TASK_INDEX.md`:
    - Flip `[ ]` → `[x]` on the item's line.
    - Replace status tag with `` `done` ``.
    - For tasks with an output: append `→ <output-path>`.
@@ -137,11 +158,11 @@ created: <YYYY-MM-DD>
 
 ---
 
-### `reopen <slug>`
+### `reopen <item>`
 Reopen a previously closed item.
-1. Open `docs/tasks/<slug>.md`.
+1. Resolve `<item>` and open the matching file.
 2. Set `status: todo` in frontmatter.
-3. Remove the `closed:` field from frontmatter. Leave `started:` in place if present — it records prior work.
+3. Remove the `closed:` field from frontmatter. For tasks, also remove `output:` because the prior output is no longer the current completion artifact. Leave `started:` in place if present — it records prior work.
 4. In `TASK_INDEX.md`:
    - Flip `[x]` → `[ ]` on the item's line.
    - Replace `` `done` `` with `` `todo` ``.
@@ -167,9 +188,10 @@ Output format: same grouped list style as the index — one item per line with c
 ### `sync`
 Rebuild `TASK_INDEX.md` from scratch by reading all files in `docs/tasks/`.
 1. Read frontmatter from every `*.md` file except `README.md` and `TASK_INDEX.md`.
-2. Group tasks by `deliverable`; group questions by `owner`.
-3. Emit the full index in the format defined in **§INDEX**.
-4. Frontmatter is the source of truth — discard the old index content entirely.
+2. Group `type: task` files by `deliverable`; group `type: question` files by `owner`.
+3. For backward compatibility, treat files with no `type` and a `deliverable` as tasks, but report them as frontmatter mismatches.
+4. Emit the full index in the format defined in **§INDEX**.
+5. Frontmatter is the source of truth — discard the old index content entirely.
 
 ---
 
@@ -177,7 +199,7 @@ Rebuild `TASK_INDEX.md` from scratch by reading all files in `docs/tasks/`.
 Read `TASK_INDEX.md` (or scan `docs/tasks/` if the index is absent) and report:
 - Count of items by status: todo / doing / blocked / done.
 - All `doing` and `blocked` items with their blockers.
-- Any frontmatter/index mismatches spotted.
+- Any frontmatter/index mismatches spotted, including missing `type`, invalid statuses, questions marked `doing`, tasks missing `deliverable`, questions missing `owner`, duplicate question numbers, and stale index lines.
 
 ---
 
@@ -207,6 +229,7 @@ Read `TASK_INDEX.md` (or scan `docs/tasks/` if the index is absent) and report:
 ```yaml
 ---
 status: todo            # todo | doing | blocked | done
+type: task
 deliverable: D2         # project-specific bucket
 created: YYYY-MM-DD
 started: YYYY-MM-DD     # added by `start`; kept on reopen as historical record
