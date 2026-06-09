@@ -38,6 +38,32 @@ Before executing any operation other than `bootstrap` / `init`, check whether `d
 
 ---
 
+## Task sizing and agent behavior
+
+A task should be small enough for one focused agent session or one coherent PR. Good tasks have one objective, concrete `Done when` criteria, independent verification, and no unresolved design choice hidden inside the scope.
+
+Split a task when it has multiple outputs, multiple owners, unresolved decisions, or a title that naturally contains "and then." Do not create tasks for every tiny edit. Create them when work needs to survive chat context, coordinate across humans or agents, or show up in git history.
+
+Agents should create tasks when breaking down a user-approved plan, discovering follow-up work that should not be done immediately, finding a blocker or dependency, extracting implementation work from an ADR, or leaving continuation work for another human or agent. Agents should not create tasks merely to describe work they are already completing in the same turn.
+
+## ADRs and decision flow
+
+Use questions for unresolved decisions, ADRs for durable decisions, and tasks for execution:
+
+```text
+Q<N> -> ADR -> T<N>
+```
+
+- Open `Q<N>` when a decision is unresolved.
+- Create or update an ADR when the answer has architectural or long-lived consequences.
+- Close the question with the decision and link to the ADR.
+- Create tasks for the implementation work that follows from the ADR.
+- Link ADR-derived tasks back to the ADR using `links:`.
+- If a task uncovers a durable decision, open a question and block or split the task until the ADR resolves it.
+- If implementation shows the ADR is wrong or incomplete, open a new question instead of silently changing task scope.
+
+---
+
 ## Operations
 
 ### `bootstrap` / `init`
@@ -55,6 +81,8 @@ Set up a fresh `docs/tasks/` folder in a new project.
 This project uses `docs/tasks/` as a lightweight repo convention for work items and open decisions. Use the `/opentasks` skill to manage it.
 
 - When planning or breaking down work, record concrete steps as tasks (`/opentasks new task <title>`) and open decisions as questions (`/opentasks new question <title>`).
+- Keep tasks sized for one focused agent session or one coherent PR. Split work with multiple outputs, owners, or unresolved decisions.
+- Use questions for unresolved decisions, ADRs for durable decisions, and tasks for execution; link ADR-derived tasks back to the ADR in `links:`.
 - Keep status current: mark items `doing` when you start, `blocked` when waiting, `done` when complete.
 - Never create task or question files manually — always go through `/opentasks` to keep the index in sync.
 ```
@@ -65,9 +93,11 @@ This project uses `docs/tasks/` as a lightweight repo convention for work items 
 Create a new task file.
 1. Find the next task number N: scan existing `t<N>-*.md` files and task frontmatter `id: T<N>`, take max N + 1 (start at 1 if none exist). Task IDs are monotonic and never reused.
 2. Generate a kebab-case slug from the title (ASCII, lowercase, hyphens; strip accents, replace spaces with hyphens).
-3. If `docs/tasks/t<N>-<slug>.md` already exists, abort and tell the user the file exists — suggest they pick a different title or run `/opentasks status` to see the existing item.
-4. Determine the deliverable bucket from context or ask the user.
-5. Write `docs/tasks/t<N>-<slug>.md` with this exact structure:
+3. Check task size before creating it. If the title or context implies multiple outputs, multiple owners, unresolved decisions, or "and then" sequencing, split it into smaller tasks or create a question for the unresolved decision first.
+4. If `docs/tasks/t<N>-<slug>.md` already exists, abort and tell the user the file exists — suggest they pick a different title or run `/opentasks status` to see the existing item.
+5. Determine the deliverable bucket from context or ask the user.
+6. If the task comes from an ADR, include the ADR path in `links:`.
+7. Write `docs/tasks/t<N>-<slug>.md` with this exact structure:
 
 ```markdown
 ---
@@ -97,7 +127,8 @@ links: []
 <What must exist first.>
 ```
 
-6. Add a line to `TASK_INDEX.md` under the correct `## <Deliverable>` group:
+8. For ADR-derived tasks, replace `links: []` with a YAML list containing the ADR path.
+9. Add a line to `TASK_INDEX.md` under the correct `## <Deliverable>` group:
    `- [ ] [T<N>. <Title>](t<N>-<slug>.md) — \`todo\``
 
 ---
@@ -271,11 +302,14 @@ Write the README in the same language as the project's documentation. It must in
 2. How it works: one file per item; frontmatter is the source of truth; `TASK_INDEX.md` is a derived view; tasks have stable `T<N>` identifiers.
 3. The four status values and what they mean for tasks vs questions (see table above).
 4. Type conventions: task vs question; what `owner` is for; what `links` is for.
-5. The full task body template as a fenced markdown block.
-6. The full question body template as a fenced markdown block.
-7. Workflow: create → start → block → close → reopen, with the exact frontmatter changes at each step.
-8. A note that closed files are kept as history — never delete.
-9. A short note that this is not a task manager, Kanban board, daemon, database, sync service, or UI.
+5. Task sizing guidance: one focused agent session or one coherent PR; split work with multiple outputs, owners, unresolved decisions, or "and then" sequencing.
+6. Agent creation guidance: create tasks for user-approved plans, deferred follow-up work, blockers, ADR implementation work, and handoffs; do not create tasks merely to describe same-turn work.
+7. ADR and decision flow: `Q<N> -> ADR -> T<N>`, plus the reverse path when a task uncovers a durable decision; ADR-derived tasks link back to the ADR in `links:`.
+8. The full task body template as a fenced markdown block.
+9. The full question body template as a fenced markdown block.
+10. Workflow: create → start → block → close → reopen, with the exact frontmatter changes at each step.
+11. A note that closed files are kept as history — never delete.
+12. A short note that this is not a task manager, Kanban board, daemon, database, sync service, or UI.
 
 ---
 

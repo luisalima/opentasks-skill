@@ -85,6 +85,8 @@ The appended block looks like this:
 This project uses `docs/tasks/` as a lightweight repo convention for work items and open decisions. Use the `/opentasks` skill to manage it.
 
 - When planning or breaking down work, record concrete steps as tasks (`/opentasks new task <title>`) and open decisions as questions (`/opentasks new question <title>`).
+- Keep tasks sized for one focused agent session or one coherent PR. Split work with multiple outputs, owners, or unresolved decisions.
+- Use questions for unresolved decisions, ADRs for durable decisions, and tasks for execution; link ADR-derived tasks back to the ADR in `links:`.
 - Keep status current: mark items `doing` when you start, `blocked` when waiting, `done` when complete.
 - Never create task or question files manually — always go through `/opentasks` to keep the index in sync.
 ```
@@ -145,6 +147,30 @@ closed: YYYY-MM-DD      # only when done
 ### Task body essentials
 
 Task files include a `## Done when` section with concrete completion criteria. A task should only be closed when those criteria are satisfied or intentionally waived. Related issues, PRs, docs, branches, commits, or local paths can be recorded in the optional `links:` frontmatter list.
+
+### Task sizing and agent behavior
+
+A task should be small enough for one focused agent session or one coherent PR. Good tasks have one objective, concrete `Done when` criteria, independent verification, and no unresolved design choice hidden inside the scope.
+
+Split a task when it has multiple outputs, multiple owners, unresolved decisions, or a title that naturally contains "and then." Do not create tasks for every tiny edit. Create them when work needs to survive chat context, coordinate across humans or agents, or show up in git history.
+
+Agents should create tasks when breaking down a user-approved plan, discovering follow-up work that should not be done immediately, finding a blocker or dependency, extracting implementation work from an ADR, or leaving continuation work for another human or agent. Agents should not create tasks merely to describe work they are already completing in the same turn.
+
+### ADRs and decision flow
+
+Use questions for unresolved decisions, ADRs for durable decisions, and tasks for execution:
+
+```text
+Q<N> -> ADR -> T<N>
+```
+
+- Open `Q<N>` when a decision is unresolved.
+- Create or update an ADR when the answer has architectural or long-lived consequences.
+- Close the question with the decision and link to the ADR.
+- Create tasks for the implementation work that follows from the ADR.
+- Link ADR-derived tasks back to the ADR using `links:`.
+- If a task uncovers a durable decision, open a question and block or split the task until the ADR resolves it.
+- If implementation shows the ADR is wrong or incomplete, open a new question instead of silently changing task scope.
 
 ### Index format
 
