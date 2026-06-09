@@ -1,8 +1,26 @@
 # opentasks-skill
 
-An Agent Skills-compatible skill for Codex and Claude Code that manages a lightweight, file-based task tracking system for small and medium projects — a flat folder of markdown files, no Jira/Linear required.
+A tiny repo convention and Agent Skills-compatible workflow for tracking coding-agent tasks and open questions in `docs/tasks/`.
 
-The system tracks both **work items** and **open questions** in `docs/tasks/` using markdown + YAML frontmatter. The `type` field distinguishes tasks from questions, tasks use stable `T<N>` identifiers, frontmatter is the source of truth, and the index is a derived view.
+OpenTasks is not a task manager, Kanban board, daemon, database, sync service, or UI. It is a small Markdown/YAML convention that lets humans and coding agents keep durable tasks and unresolved decisions visible in git.
+
+The convention tracks both **work items** and **open questions** using one markdown file per item. The `type` field distinguishes tasks from questions, tasks use stable `T<N>` identifiers, frontmatter is the source of truth, and `TASK_INDEX.md` is a derived view.
+
+## Best for
+
+- Small and medium repos
+- Agent-assisted implementation work
+- Short project plans that should survive chat context
+- Open decisions that should not disappear in conversation
+- Teams that want task state visible in normal git diffs
+
+## What this is not
+
+- Not a replacement for GitHub Issues, Linear, Jira, or Taskwarrior
+- Not a personal productivity system
+- Not a calendar/task sync format
+- Not a Kanban app
+- Not a multi-agent scheduler or claiming protocol
 
 ---
 
@@ -64,7 +82,7 @@ The appended block looks like this:
 ```markdown
 ## Task and question tracking
 
-This project uses `docs/tasks/` to track work items and open decisions. Use the `/opentasks` skill to manage it.
+This project uses `docs/tasks/` as a lightweight repo convention for work items and open decisions. Use the `/opentasks` skill to manage it.
 
 - When planning or breaking down work, record concrete steps as tasks (`/opentasks new task <title>`) and open decisions as questions (`/opentasks new question <title>`).
 - Keep status current: mark items `doing` when you start, `blocked` when waiting, `done` when complete.
@@ -85,7 +103,7 @@ docs/tasks/
 └── q<N>-<slug>.md       # One file per question, numbered
 ```
 
-Flat — no subfolders. One file per item. Closed items stay as history; never delete.
+Flat — no subfolders, no hidden state, no required CLI. One file per item. Closed items stay as history; never delete.
 
 ### Two item types
 

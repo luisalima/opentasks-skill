@@ -1,13 +1,13 @@
 ---
 name: opentasks
-description: "Manage a docs/tasks/ flat-file tracking system: bootstrap the folder, create tasks/questions, update status, close or reopen items, list open work, and rebuild the index."
+description: "Maintain a lightweight docs/tasks/ repo convention for coding-agent tasks and open questions: bootstrap the folder, create task/question markdown files, update status, close or reopen items, list open work, and rebuild the derived index."
 when_to_use: "Use when the user asks to set up a tasks folder, create a task, open a question, close or mark done, mark blocked/doing, reopen an item, show open tasks, list questions, or sync a task index. Trigger phrases include: create a task for X; open a question about Y; close Q3; mark done; set up the tasks folder; show open tasks; add a question about Y."
 argument-hint: "[bootstrap | new task <title> | new question <title> | start <item> | block <item> [reason] | done <item> | reopen <item> | list [filter] | sync | status]"
 ---
 
-# /opentasks — docs/tasks/ folder manager
+# /opentasks — docs/tasks/ convention manager
 
-You are managing the `docs/tasks/` flat file tracking system. The argument you received is:
+You are managing a lightweight repo convention in `docs/tasks/`, not an external task manager. The argument you received is:
 
 **$ARGUMENTS**
 
@@ -52,7 +52,7 @@ Set up a fresh `docs/tasks/` folder in a new project.
 ```markdown
 ## Task and question tracking
 
-This project uses `docs/tasks/` to track work items and open decisions. Use the `/opentasks` skill to manage it.
+This project uses `docs/tasks/` as a lightweight repo convention for work items and open decisions. Use the `/opentasks` skill to manage it.
 
 - When planning or breaking down work, record concrete steps as tasks (`/opentasks new task <title>`) and open decisions as questions (`/opentasks new question <title>`).
 - Keep status current: mark items `doing` when you start, `blocked` when waiting, `done` when complete.
@@ -267,7 +267,7 @@ closed: YYYY-MM-DD      # only when status = done; removed by `reopen`
 
 Write the README in the same language as the project's documentation. It must include:
 
-1. One-paragraph intro: this folder tracks both execution tasks and open questions using a flat markdown + YAML frontmatter convention; item type is distinguished by the `type` frontmatter field.
+1. One-paragraph intro: this folder is a lightweight repo convention for both execution tasks and open questions using flat markdown + YAML frontmatter; item type is distinguished by the `type` frontmatter field.
 2. How it works: one file per item; frontmatter is the source of truth; `TASK_INDEX.md` is a derived view; tasks have stable `T<N>` identifiers.
 3. The four status values and what they mean for tasks vs questions (see table above).
 4. Type conventions: task vs question; what `owner` is for; what `links` is for.
@@ -275,6 +275,7 @@ Write the README in the same language as the project's documentation. It must in
 6. The full question body template as a fenced markdown block.
 7. Workflow: create → start → block → close → reopen, with the exact frontmatter changes at each step.
 8. A note that closed files are kept as history — never delete.
+9. A short note that this is not a task manager, Kanban board, daemon, database, sync service, or UI.
 
 ---
 
