@@ -22,8 +22,9 @@ Accept common aliases:
 Where an operation accepts `<item>`, resolve it before editing:
 1. Exact filename under `docs/tasks/`, with optional `.md`.
 2. Exact slug, meaning filename without `.md`.
-3. Question shorthand `Q<N>` / `q<N>` → the unique `q<N>-*.md` file.
-4. Exact case-insensitive title match from the file heading or index line.
+3. Task shorthand `T<N>` / `t<N>` → the unique task with `id: T<N>` or `t<N>-*.md` filename.
+4. Question shorthand `Q<N>` / `q<N>` → the unique `q<N>-*.md` file.
+5. Exact case-insensitive title match from the file heading or index line.
 
 If resolution finds no item, stop and tell the user what was searched. If it finds multiple items, stop and ask for the exact slug.
 
@@ -62,26 +63,32 @@ This project uses `docs/tasks/` to track work items and open decisions. Use the 
 
 ### `new task <title>`
 Create a new task file.
-1. Generate a kebab-case slug from the title (ASCII, lowercase, hyphens; strip accents, replace spaces with hyphens).
-2. If `docs/tasks/<slug>.md` already exists, abort and tell the user the file exists — suggest they pick a different title or run `/opentasks status` to see the existing item.
-3. Determine the deliverable bucket from context or ask the user.
-4. Write `docs/tasks/<slug>.md` with this exact structure:
+1. Find the next task number N: scan existing `t<N>-*.md` files and task frontmatter `id: T<N>`, take max N + 1 (start at 1 if none exist). Task IDs are monotonic and never reused.
+2. Generate a kebab-case slug from the title (ASCII, lowercase, hyphens; strip accents, replace spaces with hyphens).
+3. If `docs/tasks/t<N>-<slug>.md` already exists, abort and tell the user the file exists — suggest they pick a different title or run `/opentasks status` to see the existing item.
+4. Determine the deliverable bucket from context or ask the user.
+5. Write `docs/tasks/t<N>-<slug>.md` with this exact structure:
 
 ```markdown
 ---
 status: todo
 type: task
+id: T<N>
 deliverable: <D1|D2|ops|…>
 created: <YYYY-MM-DD>
+links: []
 ---
 
-# <Title>
+# T<N>. <Title>
 
 ## Objective
 <One or two sentences — what this is and why it matters.>
 
 ## What we need to extract / do
 <Concrete bullets describing the actual work.>
+
+## Done when
+- <Concrete, observable completion criterion.>
 
 ## Output
 <What gets produced and where it feeds into. Write "none" if the task produces no tracked artifact.>
@@ -90,8 +97,8 @@ created: <YYYY-MM-DD>
 <What must exist first.>
 ```
 
-5. Add a line to `TASK_INDEX.md` under the correct `## <Deliverable>` group:
-   `- [ ] [<Title>](<slug>.md) — \`todo\``
+6. Add a line to `TASK_INDEX.md` under the correct `## <Deliverable>` group:
+   `- [ ] [T<N>. <Title>](t<N>-<slug>.md) — \`todo\``
 
 ---
 
@@ -147,10 +154,13 @@ created: <YYYY-MM-DD>
 ### `done <item>`
 1. Resolve `<item>` and open the matching file.
 2. If the item is already `done`, leave existing answer/output/closed fields unchanged unless the user explicitly asks to correct them, then skip to the `TASK_INDEX.md` update.
-3. Otherwise set `status: done`, add `closed: <YYYY-MM-DD>` to frontmatter if absent, and do not duplicate an existing `closed:`.
-4. **If it's a question:** add the answer inline in the body with date and source (do NOT replace the question text). If the answer is not clear from context, ask for it before closing.
-5. **If it's a task that produced a tracked artifact:** add or update `output: <path>` in frontmatter. Omit `output:` entirely if the task produced no tracked artifact.
-6. In `TASK_INDEX.md`:
+3. Before editing, validate the closure:
+   - **If it's a question:** if the answer is not clear from context, ask for it before closing.
+   - **If it's a task:** check the `## Done when` section. If the criteria are clearly unmet or ambiguous, stop and report what remains unless the user explicitly asked to close it anyway.
+4. Set `status: done`, add `closed: <YYYY-MM-DD>` to frontmatter if absent, and do not duplicate an existing `closed:`.
+5. **If it's a question:** add the answer inline in the body with date and source. Do not replace the question text.
+6. **If it's a task that produced a tracked artifact:** add or update `output: <path>` in frontmatter. Omit `output:` entirely if the task produced no tracked artifact.
+7. In `TASK_INDEX.md`:
    - Flip `[ ]` → `[x]` on the item's line.
    - Replace status tag with `` `done` ``.
    - For tasks with an output: append `→ <output-path>`.
@@ -188,8 +198,8 @@ Output format: same grouped list style as the index — one item per line with c
 ### `sync`
 Rebuild `TASK_INDEX.md` from scratch by reading all files in `docs/tasks/`.
 1. Read frontmatter from every `*.md` file except `README.md` and `TASK_INDEX.md`.
-2. Group `type: task` files by `deliverable`; group `type: question` files by `owner`.
-3. For backward compatibility, treat files with no `type` and a `deliverable` as tasks, but report them as frontmatter mismatches.
+2. Group `type: task` files by `deliverable`; group `type: question` files by `owner`. Prefer the task `id` field for labels and sorting; fall back to the filename only for legacy task files.
+3. For backward compatibility, treat files with no `type` and a `deliverable` as tasks, but report them as frontmatter mismatches. Also report task files missing `id: T<N>` as legacy task files that should be migrated.
 4. Emit the full index in the format defined in **§INDEX**.
 5. Frontmatter is the source of truth — discard the old index content entirely.
 
@@ -199,16 +209,16 @@ Rebuild `TASK_INDEX.md` from scratch by reading all files in `docs/tasks/`.
 Read `TASK_INDEX.md` (or scan `docs/tasks/` if the index is absent) and report:
 - Count of items by status: todo / doing / blocked / done.
 - All `doing` and `blocked` items with their blockers.
-- Any frontmatter/index mismatches spotted, including missing `type`, invalid statuses, questions marked `doing`, tasks missing `deliverable`, questions missing `owner`, duplicate question numbers, and stale index lines.
+- Any frontmatter/index mismatches spotted, including missing `type`, invalid statuses, questions marked `doing`, tasks missing `id`, tasks missing `deliverable`, questions missing `owner`, duplicate task IDs, duplicate question numbers, malformed `links`, and stale index lines.
 
 ---
 
 ## File naming rules
 
-- Task slugs: short, descriptive kebab-case. Examples: `llm-shortlist`, `extract-analysis-scripts`.
+- Task slugs: `t<N>-<short-slug>`. Examples: `t1-llm-shortlist`, `t8-extract-analysis-scripts`.
 - Question slugs: `q<N>-<short-slug>`. Examples: `q1-classification-rubric`, `q7-template-wording`.
 - All filenames are lowercase ASCII — strip accents, replace spaces with hyphens.
-- Question numbers are monotonic across the project lifetime. Never reuse a number.
+- Task and question numbers are monotonic across the project lifetime. Never reuse a number.
 
 ---
 
@@ -230,8 +240,10 @@ Read `TASK_INDEX.md` (or scan `docs/tasks/` if the index is absent) and report:
 ---
 status: todo            # todo | doing | blocked | done
 type: task
+id: T<N>                # stable task identifier, monotonic and never reused
 deliverable: D2         # project-specific bucket
 created: YYYY-MM-DD
+links: []               # optional related URLs or repo paths
 started: YYYY-MM-DD     # added by `start`; kept on reopen as historical record
 closed: YYYY-MM-DD      # only when status = done; removed by `reopen`
 output: path/to/file.md # only if the task produced a tracked artifact
@@ -256,9 +268,9 @@ closed: YYYY-MM-DD      # only when status = done; removed by `reopen`
 Write the README in the same language as the project's documentation. It must include:
 
 1. One-paragraph intro: this folder tracks both execution tasks and open questions using a flat markdown + YAML frontmatter convention; item type is distinguished by the `type` frontmatter field.
-2. How it works: one file per item; frontmatter is the source of truth; `TASK_INDEX.md` is a derived view.
+2. How it works: one file per item; frontmatter is the source of truth; `TASK_INDEX.md` is a derived view; tasks have stable `T<N>` identifiers.
 3. The four status values and what they mean for tasks vs questions (see table above).
-4. Type conventions: task vs question; what `owner` is for.
+4. Type conventions: task vs question; what `owner` is for; what `links` is for.
 5. The full task body template as a fenced markdown block.
 6. The full question body template as a fenced markdown block.
 7. Workflow: create → start → block → close → reopen, with the exact frontmatter changes at each step.
@@ -273,9 +285,9 @@ Write the README in the same language as the project's documentation. It must in
 
 ## D1 — <Deliverable name>
 
-- [ ] [<Title>](<slug>.md) — `todo`
-- [ ] [<Title>](<slug>.md) — `blocked` (waiting on client data)
-- [x] [<Title>](<slug>.md) — `done` → path/to/output.md
+- [ ] [T1. <Title>](t1-slug.md) — `todo`
+- [ ] [T2. <Title>](t2-slug.md) — `blocked` (waiting on client data)
+- [x] [T3. <Title>](t3-slug.md) — `done` → path/to/output.md
 
 ## D2 — <Deliverable name>
 
@@ -295,6 +307,7 @@ Write the README in the same language as the project's documentation. It must in
 
 Rules:
 - `[x]` only when `status: done`. All other statuses use `[ ]` (including `blocked`).
+- Task lines include the stable task ID in the visible label, e.g. `T4. Implement cache`.
 - `blocked` items may have a parenthetical explanation: `(waiting on client data)`.
 - Append `→ path/to/output` for `done` tasks that produced a tracked artifact.
 - Closed files are never deleted — they remain in the folder and in the index as history.
