@@ -3,7 +3,7 @@
 ## D1 — Agent self-dispatch
 
 - [x] [T1. Add `priority:` frontmatter field](t1-add-priority-field.md) — `done` → SKILL.md
-- [ ] [T2. Add `depends_on:` frontmatter field](t2-add-depends-on-field.md) — `todo`
+- [x] [T2. Add `depends_on:` frontmatter field](t2-add-depends-on-field.md) — `done` → SKILL.md
 - [ ] [T3. Add `next` operation](t3-add-next-operation.md) — `todo`
 - [ ] [T4. Add `claimed_by:` attribution to `start`](t4-add-claimed-by-attribution.md) — `todo`
 - [ ] [T5. Add `graph` operation (Mermaid)](t5-add-graph-operation.md) — `todo`

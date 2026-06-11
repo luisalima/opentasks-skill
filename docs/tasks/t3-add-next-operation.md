@@ -6,6 +6,7 @@ deliverable: D1
 created: 2026-06-11
 links:
   - docs/adr/0001-agent-self-dispatch.md
+depends_on: [T1, T2]
 ---
 
 # T3. Add `next` operation

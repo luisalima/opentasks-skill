@@ -1,11 +1,14 @@
 ---
-status: todo
+status: done
 type: task
 id: T2
 deliverable: D1
 created: 2026-06-11
 links:
   - docs/adr/0001-agent-self-dispatch.md
+started: 2026-06-11
+closed: 2026-06-11
+output: SKILL.md
 ---
 
 # T2. Add `depends_on:` frontmatter field

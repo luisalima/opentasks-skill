@@ -133,6 +133,7 @@ deliverable: D2         # project-specific bucket
 created: YYYY-MM-DD
 links: []               # optional related URLs or repo paths
 priority: p2            # optional: p1 | p2 | p3; treated as p2 when absent
+depends_on: []          # optional list of task IDs this task waits on, e.g. [T3, T7]
 started: YYYY-MM-DD     # added by start; kept on reopen
 closed: YYYY-MM-DD      # only when done; removed on reopen
 output: path/to/file.md # only if the task produced an artifact
@@ -161,7 +162,7 @@ closed: YYYY-MM-DD      # only when done
 
 ### Task body essentials
 
-Task files include a `## Done when` section with concrete completion criteria. A task should only be closed when those criteria are satisfied or intentionally waived. Related issues, PRs, docs, branches, commits, or local paths can be recorded in the optional `links:` frontmatter list. An optional `priority: p1|p2|p3` field orders work — absent means `p2`.
+Task files include a `## Done when` section with concrete completion criteria. A task should only be closed when those criteria are satisfied or intentionally waived. Related issues, PRs, docs, branches, commits, or local paths can be recorded in the optional `links:` frontmatter list. An optional `priority: p1|p2|p3` field orders work — absent means `p2`. Machine-readable dependencies go in the optional `depends_on: [T3, T7]` list; a task is **ready** when it is `todo` and every dependency is `done`. Unknown IDs, self-references, and cycles are validation errors.
 
 ### Task sizing and agent behavior
 
