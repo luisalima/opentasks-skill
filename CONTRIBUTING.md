@@ -18,7 +18,7 @@ OpenTasks is a tiny repo convention and agent skill. Contributions should keep i
 - Kanban boards, dashboards, or hosted services.
 - Required CLIs or package managers.
 - Calendar, CalDAV, or VTODO sync.
-- Multi-agent scheduling, locking, or claiming protocols.
+- Multi-agent scheduling runtimes, locking, or lease enforcement. Claim *attribution* (`claimed_by:`) is in scope; enforcing claims is not.
 
 ## Development workflow
 

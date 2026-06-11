@@ -82,6 +82,7 @@ This project uses `docs/tasks/` as a lightweight repo convention for work items 
 - Keep tasks sized for one focused agent session or one coherent PR. Split work with multiple outputs, owners, or unresolved decisions.
 - Use questions for unresolved decisions, ADRs for durable decisions, and tasks for execution; link ADR-derived tasks back to the ADR in `links:`.
 - Keep status current: mark items `doing` when you start, `blocked` when waiting, `done` when complete.
+- Starting a task records and announces a claim (`claimed_by: <who> @ <where>`). Claims are attribution, not locks.
 - Never create task or question files manually — always go through `/opentasks` to keep the index in sync.
 ```
 
@@ -167,8 +168,10 @@ created: <YYYY-MM-DD>
 3. If `status: done`, abort and tell the user to run `/opentasks reopen <item>` first.
 4. Change `status: todo` or `status: blocked` → `status: doing` in frontmatter. If it is already `doing`, leave it as-is.
 5. Add `started: <YYYY-MM-DD>` to frontmatter directly after `status` if absent. Do not duplicate or overwrite an existing `started:`.
-6. If a `## Blocker` section is present and the blocker is no longer relevant, remove it or add a short resolved note.
-7. Update the index line: replace the current status tag with `` `doing` `` and remove any `(waiting on ...)` suffix.
+6. Set `claimed_by: <who> @ <where>` in frontmatter — `<who>` is the agent or person starting the task (e.g. `claude-code`, `luisa`), `<where>` is the host, checkout, or session it is running in. If the task is already `doing` with a different `claimed_by`, overwrite it and call out the takeover in your reply — a claim is attribution, not a lock; never refuse on the basis of an existing claim.
+7. Announce the claim in your reply, e.g. "Claimed T4 as claude-code on lu-macbook."
+8. If a `## Blocker` section is present and the blocker is no longer relevant, remove it or add a short resolved note.
+9. Update the index line: replace the current status tag with `` `doing` `` and remove any `(waiting on ...)` suffix.
 
 ---
 
@@ -288,6 +291,7 @@ links: []               # optional related URLs or repo paths
 priority: p2            # optional: p1 | p2 | p3; treated as p2 when absent
 depends_on: []          # optional list of task IDs this task waits on, e.g. [T3, T7]
 started: YYYY-MM-DD     # added by `start`; kept on reopen as historical record
+claimed_by: who @ where # added by `start`; attribution, not a lock
 closed: YYYY-MM-DD      # only when status = done; removed by `reopen`
 output: path/to/file.md # only if the task produced a tracked artifact
 ---

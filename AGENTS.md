@@ -10,4 +10,5 @@ This project uses `docs/tasks/` as a lightweight repo convention for work items 
 - Keep tasks sized for one focused agent session or one coherent PR. Split work with multiple outputs, owners, or unresolved decisions.
 - Use questions for unresolved decisions, ADRs for durable decisions, and tasks for execution; link ADR-derived tasks back to the ADR in `links:`.
 - Keep status current: mark items `doing` when you start, `blocked` when waiting, `done` when complete.
+- Starting a task records and announces a claim (`claimed_by: <who> @ <where>`). Claims are attribution, not locks.
 - Never create task or question files manually — always go through `/opentasks` to keep the index in sync.

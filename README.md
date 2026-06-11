@@ -20,7 +20,7 @@ The convention tracks both **work items** and **open questions** using one markd
 - Not a personal productivity system
 - Not a calendar/task sync format
 - Not a Kanban app
-- Not a multi-agent scheduler or claiming protocol
+- Not a multi-agent scheduler — claims (`claimed_by:`) are attribution, not locks: no leases, no enforcement, git merge is the arbiter
 
 ---
 
@@ -102,6 +102,7 @@ This project uses `docs/tasks/` as a lightweight repo convention for work items 
 - Keep tasks sized for one focused agent session or one coherent PR. Split work with multiple outputs, owners, or unresolved decisions.
 - Use questions for unresolved decisions, ADRs for durable decisions, and tasks for execution; link ADR-derived tasks back to the ADR in `links:`.
 - Keep status current: mark items `doing` when you start, `blocked` when waiting, `done` when complete.
+- Starting a task records and announces a claim (`claimed_by: <who> @ <where>`). Claims are attribution, not locks.
 - Never create task or question files manually — always go through `/opentasks` to keep the index in sync.
 ```
 
@@ -135,6 +136,7 @@ links: []               # optional related URLs or repo paths
 priority: p2            # optional: p1 | p2 | p3; treated as p2 when absent
 depends_on: []          # optional list of task IDs this task waits on, e.g. [T3, T7]
 started: YYYY-MM-DD     # added by start; kept on reopen
+claimed_by: who @ where # added by start; attribution, not a lock
 closed: YYYY-MM-DD      # only when done; removed on reopen
 output: path/to/file.md # only if the task produced an artifact
 ---
@@ -162,7 +164,7 @@ closed: YYYY-MM-DD      # only when done
 
 ### Task body essentials
 
-Task files include a `## Done when` section with concrete completion criteria. A task should only be closed when those criteria are satisfied or intentionally waived. Related issues, PRs, docs, branches, commits, or local paths can be recorded in the optional `links:` frontmatter list. An optional `priority: p1|p2|p3` field orders work — absent means `p2`. Machine-readable dependencies go in the optional `depends_on: [T3, T7]` list; a task is **ready** when it is `todo` and every dependency is `done`. Unknown IDs, self-references, and cycles are validation errors.
+Task files include a `## Done when` section with concrete completion criteria. A task should only be closed when those criteria are satisfied or intentionally waived. Related issues, PRs, docs, branches, commits, or local paths can be recorded in the optional `links:` frontmatter list. An optional `priority: p1|p2|p3` field orders work — absent means `p2`. Machine-readable dependencies go in the optional `depends_on: [T3, T7]` list; a task is **ready** when it is `todo` and every dependency is `done`. Unknown IDs, self-references, and cycles are validation errors. When a task is started, `claimed_by: <who> @ <where>` records which agent or person picked it up and where it is running, and the agent announces the claim in its reply — if two checkouts claim the same task, the git merge conflict is the signal.
 
 ### Task sizing and agent behavior
 
