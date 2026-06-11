@@ -2,9 +2,9 @@
 
 All notable changes to this project are tracked here.
 
-This project uses human-readable release notes. Version numbers will be added when the first tagged release is cut.
+This project uses human-readable release notes.
 
-## Unreleased
+## 0.1.0 - 2026-06-11
 
 ### Added
 
