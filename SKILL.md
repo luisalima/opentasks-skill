@@ -1,8 +1,6 @@
 ---
 name: opentasks
-description: "Maintain a lightweight docs/tasks/ repo convention for coding-agent tasks and open questions: bootstrap the folder, create task/question markdown files, update status, close or reopen items, list open work, and rebuild the derived index."
-when_to_use: "Use when the user asks to set up a tasks folder, create a task, open a question, close or mark done, mark blocked/doing, reopen an item, show open tasks, list questions, or sync a task index. Trigger phrases include: create a task for X; open a question about Y; close Q3; mark done; set up the tasks folder; show open tasks; add a question about Y."
-argument-hint: "[bootstrap | new task <title> | new question <title> | start <item> | block <item> [reason] | done <item> | reopen <item> | list [filter] | sync | status]"
+description: "Maintain a lightweight docs/tasks/ repo convention for coding-agent tasks and open questions. Use when the user asks to bootstrap a tasks folder, create a task/question, start/block/close/reopen an item, list open tasks/questions, or sync the derived task index."
 ---
 
 # /opentasks — docs/tasks/ convention manager

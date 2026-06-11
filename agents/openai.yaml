@@ -1,0 +1,4 @@
+interface:
+  display_name: "OpenTasks"
+  short_description: "Repo tasks and open questions"
+  default_prompt: "Use $opentasks to manage repo-local tasks and open questions."

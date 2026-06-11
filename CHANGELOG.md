@@ -15,7 +15,9 @@ This project uses human-readable release notes. Version numbers will be added wh
 - Task sizing guidance for agents and humans.
 - ADR decision flow: `Q<N> -> ADR -> T<N>`.
 - Release-readiness files for contributors, conduct, security, issues, and pull requests.
+- Codex UI metadata in `agents/openai.yaml`.
 
 ### Changed
 
 - Repositioned OpenTasks as a lightweight repo convention rather than a task manager.
+- Simplified `SKILL.md` frontmatter so the skill validates cleanly.
