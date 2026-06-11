@@ -1,11 +1,15 @@
 ---
-status: todo
+status: done
 type: task
 id: T10
 deliverable: D3
 created: 2026-06-11
 links:
   - docs/adr/0003-convention-migration.md
+started: 2026-06-11
+claimed_by: claude-code @ the-tasks-folder
+closed: 2026-06-11
+output: README.md
 ---
 
 # T10. Document how to update an installed skill

@@ -64,6 +64,18 @@ Then invoke with `/opentasks`.
 
 The repository root contains `SKILL.md`, so the clone target directory name (`opentasks`) is the command name.
 
+### Updating
+
+Each install is a git clone — update it with `git pull`:
+
+```bash
+git -C ~/.claude/skills/opentasks pull    # Claude Code global
+git -C ~/.codex/skills/opentasks pull     # Codex (restart Codex afterwards)
+git -C .claude/skills/opentasks pull      # Claude Code project-level
+```
+
+Check which version is installed with `git -C ~/.claude/skills/opentasks log -1`. A stale install silently applies an old convention, so update before relying on newer fields or operations. After updating, run `/opentasks migrate` in existing projects to upgrade their `docs/tasks/` folders to the current convention.
+
 ---
 
 ## Usage
