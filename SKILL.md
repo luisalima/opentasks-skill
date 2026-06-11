@@ -93,7 +93,7 @@ Create a new task file.
 2. Generate a kebab-case slug from the title (ASCII, lowercase, hyphens; strip accents, replace spaces with hyphens).
 3. Check task size before creating it. If the title or context implies multiple outputs, multiple owners, unresolved decisions, or "and then" sequencing, split it into smaller tasks or create a question for the unresolved decision first.
 4. If `docs/tasks/t<N>-<slug>.md` already exists, abort and tell the user the file exists — suggest they pick a different title or run `/opentasks status` to see the existing item.
-5. Determine the deliverable bucket from context or ask the user.
+5. Determine the deliverable bucket from context or ask the user. If the title or context signals urgency or explicit ordering, also set `priority: p1` (do first) or `priority: p3` (can wait); otherwise omit the field — absent means `p2`.
 6. If the task comes from an ADR, include the ADR path in `links:`.
 7. Write `docs/tasks/t<N>-<slug>.md` with this exact structure:
 
@@ -128,6 +128,7 @@ links: []
 8. For ADR-derived tasks, replace `links: []` with a YAML list containing the ADR path.
 9. Add a line to `TASK_INDEX.md` under the correct `## <Deliverable>` group:
    `- [ ] [T<N>. <Title>](t<N>-<slug>.md) — \`todo\``
+   For `p1` and `p3` tasks, append the priority tag after the status: `` — `todo` `p1` ``.
 
 ---
 
@@ -219,6 +220,7 @@ Read `docs/tasks/` and print a filtered view. Accepts one optional argument:
 | `todo` / `doing` / `blocked` / `done` | Items with that exact status |
 | `<deliverable>` (e.g. `D1`, `ops`) | All items in that deliverable bucket |
 | `questions` | All question files regardless of status |
+| `p1` / `p2` / `p3` | Tasks with that priority (absent counts as `p2`) |
 
 Output format: same grouped list style as the index — one item per line with checkbox and status tag. Print a count summary at the bottom.
 
@@ -228,7 +230,7 @@ Output format: same grouped list style as the index — one item per line with c
 Rebuild `TASK_INDEX.md` from scratch by reading all files in `docs/tasks/`.
 1. Read frontmatter from every `*.md` file except `README.md` and `TASK_INDEX.md`.
 2. Group `type: task` files by `deliverable`; group `type: question` files by `owner`. Prefer the task `id` field for labels and sorting; fall back to the filename only for legacy task files.
-3. For backward compatibility, treat files with no `type` and a `deliverable` as tasks, but report them as frontmatter mismatches. Also report task files missing `id: T<N>` as legacy task files that should be migrated.
+3. For backward compatibility, treat files with no `type` and a `deliverable` as tasks, but report them as frontmatter mismatches. Also report task files missing `id: T<N>` as legacy task files that should be migrated, and report `priority` values outside `p1`/`p2`/`p3` as mismatches.
 4. Emit the full index in the format defined in **§INDEX**.
 5. Frontmatter is the source of truth — discard the old index content entirely.
 
@@ -238,7 +240,7 @@ Rebuild `TASK_INDEX.md` from scratch by reading all files in `docs/tasks/`.
 Read `TASK_INDEX.md` (or scan `docs/tasks/` if the index is absent) and report:
 - Count of items by status: todo / doing / blocked / done.
 - All `doing` and `blocked` items with their blockers.
-- Any frontmatter/index mismatches spotted, including missing `type`, invalid statuses, questions marked `doing`, tasks missing `id`, tasks missing `deliverable`, questions missing `owner`, duplicate task IDs, duplicate question numbers, malformed `links`, and stale index lines.
+- Any frontmatter/index mismatches spotted, including missing `type`, invalid statuses, questions marked `doing`, tasks missing `id`, tasks missing `deliverable`, questions missing `owner`, duplicate task IDs, duplicate question numbers, malformed `links`, invalid `priority` values, and stale index lines.
 
 ---
 
@@ -273,6 +275,7 @@ id: T<N>                # stable task identifier, monotonic and never reused
 deliverable: D2         # project-specific bucket
 created: YYYY-MM-DD
 links: []               # optional related URLs or repo paths
+priority: p2            # optional: p1 | p2 | p3; treated as p2 when absent
 started: YYYY-MM-DD     # added by `start`; kept on reopen as historical record
 closed: YYYY-MM-DD      # only when status = done; removed by `reopen`
 output: path/to/file.md # only if the task produced a tracked artifact
@@ -299,7 +302,7 @@ Write the README in the same language as the project's documentation. It must in
 1. One-paragraph intro: this folder is a lightweight repo convention for both execution tasks and open questions using flat markdown + YAML frontmatter; item type is distinguished by the `type` frontmatter field.
 2. How it works: one file per item; frontmatter is the source of truth; `TASK_INDEX.md` is a derived view; tasks have stable `T<N>` identifiers.
 3. The four status values and what they mean for tasks vs questions (see table above).
-4. Type conventions: task vs question; what `owner` is for; what `links` is for.
+4. Type conventions: task vs question; what `owner` is for; what `links` is for; the optional `priority` field (`p1`/`p2`/`p3`, default `p2`).
 5. Task sizing guidance: one focused agent session or one coherent PR; split work with multiple outputs, owners, unresolved decisions, or "and then" sequencing.
 6. Agent creation guidance: create tasks for user-approved plans, deferred follow-up work, blockers, ADR implementation work, and handoffs; do not create tasks merely to describe same-turn work.
 7. ADR and decision flow: `Q<N> -> ADR -> T<N>`, plus the reverse path when a task uncovers a durable decision; ADR-derived tasks link back to the ADR in `links:`.
@@ -342,5 +345,6 @@ Rules:
 - `[x]` only when `status: done`. All other statuses use `[ ]` (including `blocked`).
 - Task lines include the stable task ID in the visible label, e.g. `T4. Implement cache`.
 - `blocked` items may have a parenthetical explanation: `(waiting on client data)`.
+- Non-default priorities appear as a tag after the status: `` `todo` `p1` ``. Default `p2` is never shown.
 - Append `→ path/to/output` for `done` tasks that produced a tracked artifact.
 - Closed files are never deleted — they remain in the folder and in the index as history.

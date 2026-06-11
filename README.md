@@ -132,6 +132,7 @@ id: T<N>                # stable task identifier, monotonic and never reused
 deliverable: D2         # project-specific bucket
 created: YYYY-MM-DD
 links: []               # optional related URLs or repo paths
+priority: p2            # optional: p1 | p2 | p3; treated as p2 when absent
 started: YYYY-MM-DD     # added by start; kept on reopen
 closed: YYYY-MM-DD      # only when done; removed on reopen
 output: path/to/file.md # only if the task produced an artifact
@@ -160,7 +161,7 @@ closed: YYYY-MM-DD      # only when done
 
 ### Task body essentials
 
-Task files include a `## Done when` section with concrete completion criteria. A task should only be closed when those criteria are satisfied or intentionally waived. Related issues, PRs, docs, branches, commits, or local paths can be recorded in the optional `links:` frontmatter list.
+Task files include a `## Done when` section with concrete completion criteria. A task should only be closed when those criteria are satisfied or intentionally waived. Related issues, PRs, docs, branches, commits, or local paths can be recorded in the optional `links:` frontmatter list. An optional `priority: p1|p2|p3` field orders work — absent means `p2`.
 
 ### Task sizing and agent behavior
 
@@ -210,6 +211,7 @@ Q<N> -> ADR -> T<N>
 
 `[x]` only when `status: done`. Everything else uses `[ ]`, including `blocked`.
 Task lines include the stable task ID in the visible label, e.g. `T4. Implement cache`.
+Non-default priorities appear as a tag after the status (`` `todo` `p1` ``); the default `p2` is never shown.
 
 ### Naming conventions
 
