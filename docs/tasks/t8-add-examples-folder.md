@@ -1,10 +1,14 @@
 ---
-status: todo
+status: done
 type: task
 id: T8
 deliverable: D3
 created: 2026-06-11
 links: []
+started: 2026-06-11
+claimed_by: claude-code @ the-tasks-folder
+closed: 2026-06-11
+output: examples/docs/tasks/
 ---
 
 # T8. Add `examples/` folder with a populated sample

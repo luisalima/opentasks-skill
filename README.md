@@ -123,6 +123,8 @@ This project uses `docs/tasks/` as a lightweight repo convention for work items 
 
 ## How it works
 
+A populated example — every status, an answered question, priorities, dependencies, a claim, and a linked ADR — lives in [`examples/docs/tasks/`](examples/docs/tasks/).
+
 ### Folder layout
 
 ```
