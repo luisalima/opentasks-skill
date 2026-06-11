@@ -11,7 +11,7 @@
 ## D2 — Lifecycle & tooling
 
 - [x] [T6. Add `migrate` operation](t6-add-migrate-operation.md) — `done` → SKILL.md
-- [ ] [T7. Add optional validation script](t7-add-validation-script.md) — `todo`
+- [x] [T7. Add optional validation script](t7-add-validation-script.md) — `done` → scripts/opentasks-lint
 
 ## D3 — Docs & examples
 

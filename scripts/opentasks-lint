@@ -1,0 +1,203 @@
+#!/usr/bin/env python3
+"""Validate a docs/tasks/ folder against the OpenTasks convention.
+
+Optional tooling — the convention works without it. Usage:
+
+    scripts/opentasks-lint [path/to/docs/tasks]
+
+Exits 0 when the folder is clean, 1 with one finding per line otherwise.
+No dependencies beyond the Python 3 standard library.
+"""
+
+import re
+import sys
+from pathlib import Path
+
+STATUSES = {"todo", "doing", "blocked", "done"}
+PRIORITIES = {"p1", "p2", "p3"}
+TASK_FILE = re.compile(r"^t(\d+)-[a-z0-9-]+\.md$")
+QUESTION_FILE = re.compile(r"^q(\d+)-[a-z0-9-]+\.md$")
+TASK_ID = re.compile(r"^T(\d+)$")
+INDEX_LINE = re.compile(
+    r"^- \[(?P<box>[ x])\] \[(?P<label>[^\]]+)\]\((?P<file>[^)]+)\) — `(?P<status>[a-z0-9]+)`"
+)
+
+
+def parse_frontmatter(text, findings, name):
+    lines = text.splitlines()
+    if not lines or lines[0].strip() != "---":
+        findings.append(f"{name}: missing frontmatter")
+        return {}
+    fm, key = {}, None
+    for line in lines[1:]:
+        if line.strip() == "---":
+            return fm
+        item = re.match(r"^\s+-\s+(.*)$", line)
+        if item and key:
+            fm[key].append(item.group(1).strip())
+            continue
+        pair = re.match(r"^([A-Za-z_]+):\s*(.*)$", line)
+        if not pair:
+            findings.append(f"{name}: unparseable frontmatter line: {line!r}")
+            key = None
+            continue
+        key, raw = pair.group(1), pair.group(2).strip()
+        if raw.startswith("[") and raw.endswith("]"):
+            inner = raw[1:-1].strip()
+            fm[key] = [v.strip() for v in inner.split(",") if v.strip()]
+        elif raw == "":
+            fm[key] = []  # block list follows (or genuinely empty)
+        else:
+            fm[key] = raw
+    findings.append(f"{name}: frontmatter never closed with ---")
+    return fm
+
+
+def check_items(folder, findings):
+    items = {}
+    task_ids, question_nums = {}, {}
+    for path in sorted(folder.glob("*.md")):
+        if path.name in ("README.md", "TASK_INDEX.md"):
+            continue
+        name = path.name
+        fm = parse_frontmatter(path.read_text(encoding="utf-8"), findings, name)
+        items[name] = fm
+        status = fm.get("status")
+        if status not in STATUSES:
+            findings.append(f"{name}: invalid status {status!r}")
+        if "created" not in fm:
+            findings.append(f"{name}: missing created date")
+        if status == "done" and "closed" not in fm:
+            findings.append(f"{name}: done but missing closed date")
+        if status != "done" and "closed" in fm:
+            findings.append(f"{name}: closed date on a non-done item")
+
+        itype = fm.get("type")
+        if itype == "task" or (itype is None and "deliverable" in fm):
+            if itype is None:
+                findings.append(f"{name}: missing type (legacy task — run /opentasks migrate)")
+            tid = fm.get("id")
+            m = TASK_ID.match(tid) if isinstance(tid, str) else None
+            if not m:
+                findings.append(f"{name}: missing or malformed task id (got {tid!r})")
+            else:
+                if tid in task_ids:
+                    findings.append(f"{name}: duplicate task id {tid} (also {task_ids[tid]})")
+                task_ids[tid] = name
+                fmatch = TASK_FILE.match(name)
+                if not fmatch:
+                    findings.append(f"{name}: task filename not t<N>-<slug>.md")
+                elif fmatch.group(1) != m.group(1):
+                    findings.append(f"{name}: filename number does not match id {tid}")
+            if "deliverable" not in fm:
+                findings.append(f"{name}: task missing deliverable")
+            prio = fm.get("priority")
+            if prio is not None and prio not in PRIORITIES:
+                findings.append(f"{name}: invalid priority {prio!r}")
+        elif itype == "question":
+            qmatch = QUESTION_FILE.match(name)
+            if not qmatch:
+                findings.append(f"{name}: question filename not q<N>-<slug>.md")
+            else:
+                num = qmatch.group(1)
+                if num in question_nums:
+                    findings.append(f"{name}: duplicate question number (also {question_nums[num]})")
+                question_nums[num] = name
+            if "owner" not in fm:
+                findings.append(f"{name}: question missing owner")
+            if status == "doing":
+                findings.append(f"{name}: questions never use status doing")
+        else:
+            findings.append(f"{name}: missing or unknown type {itype!r}")
+    check_dependencies(items, task_ids, findings)
+    return items
+
+
+def check_dependencies(items, task_ids, findings):
+    deps = {}
+    for name, fm in items.items():
+        raw = fm.get("depends_on")
+        if raw is None:
+            continue
+        if not isinstance(raw, list):
+            findings.append(f"{name}: depends_on must be a list")
+            continue
+        tid = fm.get("id")
+        for dep in raw:
+            if dep not in task_ids:
+                findings.append(f"{name}: depends_on references unknown task {dep!r}")
+            if dep == tid:
+                findings.append(f"{name}: depends_on references itself")
+        if isinstance(tid, str):
+            deps[tid] = [d for d in raw if d in task_ids]
+        if fm.get("status") == "doing":
+            waiting = [d for d in raw if d in task_ids and items[task_ids[d]].get("status") != "done"]
+            if waiting:
+                findings.append(f"{name}: doing but dependencies not done: {', '.join(waiting)}")
+    state = {}  # 1 = visiting, 2 = done
+
+    def visit(node, trail):
+        if state.get(node) == 1:
+            findings.append(f"dependency cycle: {' -> '.join(trail + [node])}")
+            return
+        if state.get(node) == 2:
+            return
+        state[node] = 1
+        for nxt in deps.get(node, []):
+            visit(nxt, trail + [node])
+        state[node] = 2
+
+    for node in deps:
+        visit(node, [])
+
+
+def check_index(folder, items, findings):
+    index = folder / "TASK_INDEX.md"
+    if not index.exists():
+        findings.append("TASK_INDEX.md: missing (run /opentasks sync)")
+        return
+    listed = {}
+    for line in index.read_text(encoding="utf-8").splitlines():
+        m = INDEX_LINE.match(line.strip())
+        if not m:
+            continue
+        fname = m.group("file")
+        if fname in listed:
+            findings.append(f"TASK_INDEX.md: {fname} listed more than once")
+        listed[fname] = m
+        fm = items.get(fname)
+        if fm is None:
+            findings.append(f"TASK_INDEX.md: stale line for missing file {fname}")
+            continue
+        status = fm.get("status")
+        if m.group("status") != status:
+            findings.append(
+                f"TASK_INDEX.md: {fname} tagged `{m.group('status')}` but frontmatter says `{status}`"
+            )
+        box_done = m.group("box") == "x"
+        if box_done != (status == "done"):
+            findings.append(f"TASK_INDEX.md: {fname} checkbox does not match status `{status}`")
+    for fname in items:
+        if fname not in listed:
+            findings.append(f"TASK_INDEX.md: {fname} not listed (run /opentasks sync)")
+
+
+def main():
+    folder = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("docs/tasks")
+    if not folder.is_dir():
+        print(f"opentasks-lint: no such folder: {folder}", file=sys.stderr)
+        return 2
+    findings = []
+    items = check_items(folder, findings)
+    check_index(folder, items, findings)
+    for finding in findings:
+        print(finding)
+    if findings:
+        print(f"\n{len(findings)} finding(s) in {folder}", file=sys.stderr)
+        return 1
+    print(f"ok: {len(items)} item(s) in {folder} validate cleanly")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,10 +1,14 @@
 ---
-status: todo
+status: done
 type: task
 id: T7
 deliverable: D2
 created: 2026-06-11
 links: []
+started: 2026-06-11
+claimed_by: claude-code @ the-tasks-folder
+closed: 2026-06-11
+output: scripts/opentasks-lint
 ---
 
 # T7. Add optional validation script

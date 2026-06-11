@@ -229,6 +229,16 @@ Q<N> -> ADR -> T<N>
 Task lines include the stable task ID in the visible label, e.g. `T4. Implement cache`.
 Non-default priorities appear as a tag after the status (`` `todo` `p1` ``); the default `p2` is never shown.
 
+### Optional validation
+
+`scripts/opentasks-lint` checks a `docs/tasks/` folder against the convention: frontmatter parses, statuses and priorities are valid, task IDs are present and unique, `depends_on` references resolve without self-references or cycles, and `TASK_INDEX.md` matches the files. It is a single Python 3 file with no dependencies — and entirely optional; the convention works without it.
+
+```bash
+scripts/opentasks-lint docs/tasks   # exits 1 with one finding per line
+```
+
+Copy it into a repo (or vendor it however you like) to run in CI. The skill never requires it.
+
 ### Naming conventions
 
 - Task slugs: `t<N>-<slug>`, e.g. `t1-llm-shortlist`, `t8-extract-analysis-scripts` — N is monotonic, never reused
