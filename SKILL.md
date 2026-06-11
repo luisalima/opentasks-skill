@@ -239,6 +239,21 @@ Rebuild `TASK_INDEX.md` from scratch by reading all files in `docs/tasks/`.
 
 ---
 
+### `migrate`
+Upgrade a legacy `docs/tasks/` folder to the current convention in place. Idempotent — running it on an up-to-date folder changes nothing.
+1. Read every `*.md` file except `README.md` and `TASK_INDEX.md`.
+2. For each file, apply only the upgrades it is missing:
+   - No `type` but a `deliverable` → add `type: task`. No `type` but an `owner` → add `type: question`. Neither → report the file as ambiguous; do not guess.
+   - Task missing `id:` → take `T<N>` from a `t<N>-*` filename if present; otherwise allocate the next free number (monotonic, never reused).
+   - Task file not named `t<N>-<slug>.md` → rename it to match its `id` (use `git mv` in a git repo).
+   - Task missing `links:` → add `links: []`.
+3. Run `sync` to rebuild the index.
+4. Report every change made, file by file. If nothing needed upgrading, say so.
+
+When a future convention change affects existing files, its upgrade steps must be added to this operation in the same PR (see CONTRIBUTING).
+
+---
+
 ### `status` (default when no argument given)
 Read `TASK_INDEX.md` (or scan `docs/tasks/` if the index is absent) and report:
 - Count of items by status: todo / doing / blocked / done.

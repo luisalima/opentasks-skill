@@ -47,7 +47,7 @@ git diff --check
 - The README and skill instructions agree.
 - New task fields or status behavior are documented in both places.
 - `git diff --check` passes.
-- The PR describes any migration impact for existing `docs/tasks/` folders.
+- Any change affecting existing `docs/tasks/` folders extends the `migrate` operation in the same PR, and the PR describes the impact.
 
 ## Release checklist
 

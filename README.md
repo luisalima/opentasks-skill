@@ -78,6 +78,7 @@ The repository root contains `SKILL.md`, so the clone target directory name (`op
 /opentasks reopen <item>          Reopen a closed item
 /opentasks list [filter]          List items by status, deliverable, or questions
 /opentasks sync                   Rebuild TASK_INDEX.md from frontmatter
+/opentasks migrate                Upgrade a legacy docs/tasks/ folder in place
 /opentasks status                 Show open/blocked items (default)
 ```
 

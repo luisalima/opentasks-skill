@@ -10,7 +10,7 @@
 
 ## D2 — Lifecycle & tooling
 
-- [ ] [T6. Add `migrate` operation](t6-add-migrate-operation.md) — `todo`
+- [x] [T6. Add `migrate` operation](t6-add-migrate-operation.md) — `done` → SKILL.md
 - [ ] [T7. Add optional validation script](t7-add-validation-script.md) — `todo`
 
 ## D3 — Docs & examples

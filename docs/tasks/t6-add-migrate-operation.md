@@ -1,11 +1,15 @@
 ---
-status: todo
+status: done
 type: task
 id: T6
 deliverable: D2
 created: 2026-06-11
 links:
   - docs/adr/0003-convention-migration.md
+started: 2026-06-11
+claimed_by: claude-code @ the-tasks-folder
+closed: 2026-06-11
+output: SKILL.md
 ---
 
 # T6. Add `migrate` operation
