@@ -24,6 +24,20 @@ The convention tracks both **work items** and **open questions** using one markd
 
 ---
 
+## Project status
+
+OpenTasks is early and intentionally small. The format is still allowed to evolve, but changes should preserve the core promise: plain markdown files, stable task/question IDs, and no required service or runtime. See [CHANGELOG.md](CHANGELOG.md) for notable changes.
+
+## Contributing
+
+Contributions are welcome when they keep the convention lightweight. Start with [CONTRIBUTING.md](CONTRIBUTING.md), follow the [Code of Conduct](CODE_OF_CONDUCT.md), and see [SECURITY.md](SECURITY.md) for vulnerability reporting.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
+
+---
+
 ## Installation
 
 ### Codex
