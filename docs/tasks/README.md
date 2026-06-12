@@ -101,11 +101,21 @@ created: <YYYY-MM-DD>
 ## Workflow
 
 - **create** — file written with `status: todo` and `created:` date; line added to the index.
-- **start** (tasks only) — `status:` → `doing`; `started: <date>` added if absent.
+- **start** (tasks only) — `status:` → `doing`; `started: <date>` added if absent; `claimed_by: <who> @ <where>` records who picked it up.
 - **block** — `status:` → `blocked`; a `## Blocker` section explains what's being waited on; index line gets `(waiting on …)`.
 - **done** — `status:` → `done`; `closed: <date>` added; tasks that produced an artifact get `output: <path>`; questions get the answer recorded inline with date and source.
 - **reopen** — `status:` → `todo`; `closed:` (and `output:` for tasks) removed; `started:` kept as historical record.
 
 Closed files are kept as history — never delete them.
+
+## Limitations
+
+Task state is **eventually consistent**. It lives in git, so what you see is your checkout's view: a status change or claim made on another branch or machine is invisible until that branch is pushed and merged. Consequences:
+
+- `claimed_by` is attribution, not a lock — two agents on different checkouts can claim the same task without either noticing. The claim tells you who to talk to, not who has exclusive rights.
+- The index and frontmatter can both be "correct" yet stale relative to work elsewhere; convergence happens at merge time, like any other file in the repo.
+- Conflicting edits to the same task file are resolved as ordinary git merge conflicts.
+
+If tighter coordination is ever needed, that's a workflow decision, not a convention tweak (tracked as [Q1](q1-tasks-on-always-pushed-branch.md)).
 
 This folder is not a task manager, Kanban board, daemon, database, sync service, or UI. It is markdown in git.
