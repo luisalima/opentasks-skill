@@ -1,5 +1,7 @@
 ---
-status: todo
+status: done
+started: 2026-06-12
+claimed_by: claude-code @ the-tasks-folder
 type: task
 id: T3
 deliverable: D1
@@ -7,6 +9,8 @@ created: 2026-06-11
 links:
   - docs/adr/0001-agent-self-dispatch.md
 depends_on: [T1, T2]
+closed: 2026-06-12
+output: SKILL.md
 ---
 
 # T3. Add `next` operation

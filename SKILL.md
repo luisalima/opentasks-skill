@@ -229,6 +229,16 @@ Output format: same grouped list style as the index — one item per line with c
 
 ---
 
+### `next [deliverable]`
+Recommend the next task to pick up — answers "what should I work on?" deterministically. Read-only: it changes no files and claims nothing.
+1. Read frontmatter from every task file. If a deliverable argument is given (e.g. `next D1`), consider only tasks in that bucket.
+2. Collect the **ready** tasks: `status: todo` with every ID in `depends_on` `done` (see **Dependencies and readiness**).
+3. Pick the highest-priority ready task (`p1` before `p2` before `p3`; absent counts as `p2`). Break ties by lowest task number.
+4. Report the pick: ID, title, file, and why it was chosen — its priority and which dependencies are satisfied. List the runners-up briefly, one line each, in the same priority-then-number order. Suggest `/opentasks start T<N>` to claim the pick.
+5. If no task is ready, say so, and show the highest-priority non-ready open task (same ordering) with what blocks it: its unmet `depends_on` IDs with their statuses, or its `## Blocker` section if it is `blocked`. If there are no open tasks at all, say so.
+
+---
+
 ### `sync`
 Rebuild `TASK_INDEX.md` from scratch by reading all files in `docs/tasks/`.
 1. Read frontmatter from every `*.md` file except `README.md` and `TASK_INDEX.md`.
@@ -286,7 +296,7 @@ Read `TASK_INDEX.md` (or scan `docs/tasks/` if the index is absent) and report:
 
 Tasks may declare machine-readable dependencies in `depends_on:` — a YAML list of task IDs, e.g. `depends_on: [T3, T7]`. The `## Dependencies` body section stays free-text context; `depends_on` is the normative list.
 
-A task is **ready** when `status: todo` and every task in `depends_on` is `done`.
+A task is **ready** when `status: todo` and every task in `depends_on` is `done`. The `next` operation picks among ready tasks.
 
 `sync` and `status` validate `depends_on`: unknown task IDs, self-references, and dependency cycles are frontmatter mismatches. `status` also flags `doing` tasks whose dependencies are not all `done`.
 

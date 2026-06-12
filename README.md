@@ -89,6 +89,7 @@ Check which version is installed with `git -C ~/.claude/skills/opentasks log -1`
 /opentasks done <item>            Close an item (task or question)
 /opentasks reopen <item>          Reopen a closed item
 /opentasks list [filter]          List items by status, deliverable, or questions
+/opentasks next [deliverable]     Recommend the next ready task to pick up
 /opentasks sync                   Rebuild TASK_INDEX.md from frontmatter
 /opentasks migrate                Upgrade a legacy docs/tasks/ folder in place
 /opentasks status                 Show open/blocked items (default)
@@ -179,7 +180,7 @@ closed: YYYY-MM-DD      # only when done
 
 ### Task body essentials
 
-Task files include a `## Done when` section with concrete completion criteria. A task should only be closed when those criteria are satisfied or intentionally waived. Related issues, PRs, docs, branches, commits, or local paths can be recorded in the optional `links:` frontmatter list. An optional `priority: p1|p2|p3` field orders work — absent means `p2`. Machine-readable dependencies go in the optional `depends_on: [T3, T7]` list; a task is **ready** when it is `todo` and every dependency is `done`. Unknown IDs, self-references, and cycles are validation errors. When a task is started, `claimed_by: <who> @ <where>` records which agent or person picked it up and where it is running, and the agent announces the claim in its reply — if two checkouts claim the same task, the git merge conflict is the signal.
+Task files include a `## Done when` section with concrete completion criteria. A task should only be closed when those criteria are satisfied or intentionally waived. Related issues, PRs, docs, branches, commits, or local paths can be recorded in the optional `links:` frontmatter list. An optional `priority: p1|p2|p3` field orders work — absent means `p2`. Machine-readable dependencies go in the optional `depends_on: [T3, T7]` list; a task is **ready** when it is `todo` and every dependency is `done` — `/opentasks next` recommends the highest-priority ready task. Unknown IDs, self-references, and cycles are validation errors. When a task is started, `claimed_by: <who> @ <where>` records which agent or person picked it up and where it is running, and the agent announces the claim in its reply — if two checkouts claim the same task, the git merge conflict is the signal.
 
 ### Task sizing and agent behavior
 
