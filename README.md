@@ -90,6 +90,7 @@ Check which version is installed with `git -C ~/.claude/skills/opentasks log -1`
 /opentasks reopen <item>          Reopen a closed item
 /opentasks list [filter]          List items by status, deliverable, or questions
 /opentasks next [deliverable]     Recommend the next ready task to pick up
+/opentasks graph [write]          Render the depends_on graph as Mermaid (write embeds it in TASK_INDEX.md)
 /opentasks sync                   Rebuild TASK_INDEX.md from frontmatter
 /opentasks migrate                Upgrade a legacy docs/tasks/ folder in place
 /opentasks status                 Show open/blocked items (default)

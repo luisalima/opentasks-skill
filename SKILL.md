@@ -239,13 +239,39 @@ Recommend the next task to pick up — answers "what should I work on?" determin
 
 ---
 
+### `graph [write]`
+Visualize the task dependency graph from `depends_on` as a Mermaid flowchart. GitHub renders Mermaid natively. Read-only unless `write` is given.
+1. Read frontmatter from every task file: `id`, `status`, `depends_on`, and the title from the `# T<N>.` heading.
+2. If no task has a non-empty `depends_on`, print "No `depends_on` relationships found — nothing to graph." and stop. Never emit an empty diagram.
+3. Build a fenced ` ```mermaid ` block:
+   - First line: `graph TD`.
+   - Include only tasks that appear on either side of a dependency edge; leave unconnected tasks out to keep the diagram readable.
+   - One node per included task: `T5["T5. <Title>"]:::<status>` — always double-quote the label and strip backticks and double quotes from the title.
+   - One edge per dependency, pointing from prerequisite to dependent: `depends_on: [T2]` on T5 emits `T2 --> T5`.
+   - A `depends_on` ID with no matching task file still gets a node, labelled `T9["T9 (missing)"]:::missing` — `sync` and `status` report it as a mismatch.
+4. Style nodes by status by appending these classDefs at the end of the block — done greyed out, doing highlighted, blocked marked with a dashed red border:
+
+```text
+classDef todo fill:#ffffff,stroke:#495057
+classDef doing fill:#fff3bf,stroke:#f59f00,stroke-width:2px
+classDef blocked fill:#ffe3e3,stroke:#e03131,stroke-dasharray: 5 5
+classDef done fill:#e9ecef,stroke:#adb5bd,color:#868e96
+classDef missing fill:#ffffff,stroke:#e03131,stroke-dasharray: 2 2,color:#e03131
+```
+
+5. Output destination:
+   - **Default:** print the Mermaid block to the user. No file is touched.
+   - **`graph write`:** also write the block into `TASK_INDEX.md` under a `## Dependency graph` section at the end of the file, replacing that section if it already exists. Once the section exists, `sync` regenerates it on every run; delete the section to stop maintaining it.
+
+---
+
 ### `sync`
 Rebuild `TASK_INDEX.md` from scratch by reading all files in `docs/tasks/`.
 1. Read frontmatter from every `*.md` file except `README.md` and `TASK_INDEX.md`.
 2. Group `type: task` files by `deliverable`; group `type: question` files by `owner`. Prefer the task `id` field for labels and sorting; fall back to the filename only for legacy task files.
 3. For backward compatibility, treat files with no `type` and a `deliverable` as tasks, but report them as frontmatter mismatches. Also report task files missing `id: T<N>` as legacy task files that should be migrated, and report `priority` values outside `p1`/`p2`/`p3` as mismatches. Validate `depends_on`: unknown task IDs, self-references, and cycles are mismatches.
 4. Emit the full index in the format defined in **§INDEX**.
-5. Frontmatter is the source of truth — discard the old index content entirely.
+5. Frontmatter is the source of truth — discard the old index content entirely, with one exception: if the old index had a `## Dependency graph` section (created by `graph write`), regenerate it with the rules from **`graph`** and keep it at the end of the file.
 
 ---
 
@@ -388,3 +414,4 @@ Rules:
 - Non-default priorities appear as a tag after the status: `` `todo` `p1` ``. Default `p2` is never shown.
 - Append `→ path/to/output` for `done` tasks that produced a tracked artifact.
 - Closed files are never deleted — they remain in the folder and in the index as history.
+- An optional `## Dependency graph` section (created by `graph write`) may close the file; `sync` regenerates it from `depends_on` frontmatter.

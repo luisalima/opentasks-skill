@@ -1,5 +1,9 @@
 ---
-status: todo
+status: done
+started: 2026-06-12
+closed: 2026-06-12
+claimed_by: claude-code @ Mac
+output: SKILL.md
 type: task
 id: T5
 deliverable: D1
