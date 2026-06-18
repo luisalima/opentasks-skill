@@ -16,6 +16,8 @@ Accept common aliases:
 - `create task`, `add task`, `task` → `new task`
 - `open question`, `add question`, `question` → `new question`
 - `close`, `finish`, `complete`, `mark done` → `done`
+- `begin`, `work on` → `start`
+- `pick up`, `reserve` → `claim`
 
 Where an operation accepts `<item>`, resolve it before editing:
 1. Exact filename under `docs/tasks/`, with optional `.md`.
@@ -82,7 +84,7 @@ This project uses `docs/tasks/` as a lightweight repo convention for work items 
 - Keep tasks sized for one focused agent session or one coherent PR. Split work with multiple outputs, owners, or unresolved decisions.
 - Use questions for unresolved decisions, ADRs for durable decisions, and tasks for execution; link ADR-derived tasks back to the ADR in `links:`.
 - Keep status current: mark items `doing` when you start, `blocked` when waiting, `done` when complete.
-- Starting a task records and announces a claim (`claimed_by: <who> @ <where>`). Claims are attribution, not locks.
+- `/opentasks start <item>` claims a task and begins the work in the same turn; `/opentasks claim <item>` records the claim (`claimed_by: <who> @ <where>`) without starting. Claims are attribution, not locks.
 - Never create task or question files manually — always go through `/opentasks` to keep the index in sync.
 ```
 
@@ -162,16 +164,26 @@ created: <YYYY-MM-DD>
 
 ---
 
-### `start <item>`
+### `claim <item>`
+Record that someone is picking a task up, without beginning the work — e.g. reserving it for a later session, another checkout, or another person.
 1. Resolve `<item>` and open the matching file.
 2. If the file has `type: question` in frontmatter, abort and tell the user: questions don't use `doing` status — use `/opentasks block` to flag as waiting, or `/opentasks done` to record the answer.
 3. If `status: done`, abort and tell the user to run `/opentasks reopen <item>` first.
 4. Change `status: todo` or `status: blocked` → `status: doing` in frontmatter. If it is already `doing`, leave it as-is.
 5. Add `started: <YYYY-MM-DD>` to frontmatter directly after `status` if absent. Do not duplicate or overwrite an existing `started:`.
-6. Set `claimed_by: <who> @ <where>` in frontmatter — `<who>` is the agent or person starting the task (e.g. `claude-code`, `luisa`), `<where>` is the host, checkout, or session it is running in. If the task is already `doing` with a different `claimed_by`, overwrite it and call out the takeover in your reply — a claim is attribution, not a lock; never refuse on the basis of an existing claim.
+6. Set `claimed_by: <who> @ <where>` in frontmatter — `<who>` is the agent or person claiming the task (e.g. `claude-code`, `luisa`), `<where>` is the host, checkout, or session it is running in. If the task is already `doing` with a different `claimed_by`, overwrite it and call out the takeover in your reply — a claim is attribution, not a lock; never refuse on the basis of an existing claim.
 7. Announce the claim in your reply, e.g. "Claimed T4 as claude-code on lu-macbook."
 8. If a `## Blocker` section is present and the blocker is no longer relevant, remove it or add a short resolved note.
 9. Update the index line: replace the current status tag with `` `doing` `` and remove any `(waiting on ...)` suffix.
+
+---
+
+### `start <item>`
+Claim the task, then begin working on it in the same turn. `start` = `claim` + execution; use `claim` when the work should not begin yet.
+1. Perform every step of `claim <item>` above.
+2. Then begin executing the task immediately — do not stop after announcing the claim. Read the task body and carry out `## What we need to extract / do`, working toward the `## Done when` criteria.
+3. If execution hits a blocker, a missing dependency, or an unresolved decision, record it (`block <item>`, or a new question) and report what is needed rather than silently stopping.
+4. If the `## Done when` criteria are met within the session, close the task via the `done <item>` flow.
 
 ---
 
@@ -234,7 +246,7 @@ Recommend the next task to pick up — answers "what should I work on?" determin
 1. Read frontmatter from every task file. If a deliverable argument is given (e.g. `next D1`), consider only tasks in that bucket.
 2. Collect the **ready** tasks: `status: todo` with every ID in `depends_on` `done` (see **Dependencies and readiness**).
 3. Pick the highest-priority ready task (`p1` before `p2` before `p3`; absent counts as `p2`). Break ties by lowest task number.
-4. Report the pick: ID, title, file, and why it was chosen — its priority and which dependencies are satisfied. List the runners-up briefly, one line each, in the same priority-then-number order. Suggest `/opentasks start T<N>` to claim the pick.
+4. Report the pick: ID, title, file, and why it was chosen — its priority and which dependencies are satisfied. List the runners-up briefly, one line each, in the same priority-then-number order. Suggest `/opentasks start T<N>` to claim it and begin, or `/opentasks claim T<N>` to just reserve it.
 5. If no task is ready, say so, and show the highest-priority non-ready open task (same ordering) with what blocks it: its unmet `depends_on` IDs with their statuses, or its `## Blocker` section if it is `blocked`. If there are no open tasks at all, say so.
 
 ---
@@ -341,8 +353,8 @@ created: YYYY-MM-DD
 links: []               # optional related URLs or repo paths
 priority: p2            # optional: p1 | p2 | p3; treated as p2 when absent
 depends_on: []          # optional list of task IDs this task waits on, e.g. [T3, T7]
-started: YYYY-MM-DD     # added by `start`; kept on reopen as historical record
-claimed_by: who @ where # added by `start`; attribution, not a lock
+started: YYYY-MM-DD     # added by `claim`/`start`; kept on reopen as historical record
+claimed_by: who @ where # added by `claim`/`start`; attribution, not a lock
 closed: YYYY-MM-DD      # only when status = done; removed by `reopen`
 output: path/to/file.md # only if the task produced a tracked artifact
 ---
@@ -374,7 +386,7 @@ Write the README in the same language as the project's documentation. It must in
 7. ADR and decision flow: `Q<N> -> ADR -> T<N>`, plus the reverse path when a task uncovers a durable decision; ADR-derived tasks link back to the ADR in `links:`.
 8. The full task body template as a fenced markdown block.
 9. The full question body template as a fenced markdown block.
-10. Workflow: create → start → block → close → reopen, with the exact frontmatter changes at each step.
+10. Workflow: create → claim/start → block → close → reopen, with the exact frontmatter changes at each step, including that `start` claims and then begins the work while `claim` only records the claim.
 11. A note that closed files are kept as history — never delete.
 12. A short note that this is not a task manager, Kanban board, daemon, database, sync service, or UI.
 

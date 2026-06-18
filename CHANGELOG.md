@@ -6,8 +6,13 @@ This project uses human-readable release notes.
 
 ## Unreleased
 
+### Added
+
+- `claim <item>` operation: record a claim (`claimed_by`, `started`, status `doing`) without beginning the work.
+
 ### Changed
 
+- `start <item>` now claims the task **and** begins executing it in the same turn; previously it only recorded the claim.
 - `SKILL.md` is the canonical convention definition (ADR-0002): the README keeps positioning, installation, usage, and a conceptual overview, and links into `SKILL.md` for templates, frontmatter, statuses, naming, and the index format.
 
 ## 0.1.0 - 2026-06-11

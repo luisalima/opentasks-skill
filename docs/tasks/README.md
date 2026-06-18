@@ -101,7 +101,8 @@ created: <YYYY-MM-DD>
 ## Workflow
 
 - **create** — file written with `status: todo` and `created:` date; line added to the index.
-- **start** (tasks only) — `status:` → `doing`; `started: <date>` added if absent; `claimed_by: <who> @ <where>` records who picked it up.
+- **claim** (tasks only) — `status:` → `doing`; `started: <date>` added if absent; `claimed_by: <who> @ <where>` records who picked it up, without beginning the work.
+- **start** (tasks only) — does everything `claim` does, then begins executing the task in the same turn.
 - **block** — `status:` → `blocked`; a `## Blocker` section explains what's being waited on; index line gets `(waiting on …)`.
 - **done** — `status:` → `done`; `closed: <date>` added; tasks that produced an artifact get `output: <path>`; questions get the answer recorded inline with date and source.
 - **reopen** — `status:` → `todo`; `closed:` (and `output:` for tasks) removed; `started:` kept as historical record.

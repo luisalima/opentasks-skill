@@ -84,7 +84,8 @@ Check which version is installed with `git -C ~/.claude/skills/opentasks log -1`
 /opentasks bootstrap              Set up docs/tasks/ in a new project
 /opentasks new task <title>       Create a new task
 /opentasks new question <title>   Create a new question
-/opentasks start <item>           Mark a task as in progress
+/opentasks start <item>           Claim a task and begin working on it
+/opentasks claim <item>           Claim a task without starting the work
 /opentasks block <item> [reason]  Mark an item as blocked
 /opentasks done <item>            Close an item (task or question)
 /opentasks reopen <item>          Reopen a closed item
