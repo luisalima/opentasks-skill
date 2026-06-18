@@ -102,30 +102,13 @@ Check which version is installed with `git -C ~/.claude/skills/opentasks log -1`
 
 ## Setup
 
-After installing the skill, run `/opentasks bootstrap` in your project. This:
-1. Creates `docs/tasks/` with a `README.md` and empty `TASK_INDEX.md`.
-2. Appends a standing instruction block to `AGENTS.md` (and `CLAUDE.md` if present) when that section is not already present.
-
-The appended block looks like this:
-
-```markdown
-## Task and question tracking
-
-This project uses `docs/tasks/` as a lightweight repo convention for work items and open decisions. Use the `/opentasks` skill to manage it.
-
-- When planning or breaking down work, record concrete steps as tasks (`/opentasks new task <title>`) and open decisions as questions (`/opentasks new question <title>`).
-- Keep tasks sized for one focused agent session or one coherent PR. Split work with multiple outputs, owners, or unresolved decisions.
-- Use questions for unresolved decisions, ADRs for durable decisions, and tasks for execution; link ADR-derived tasks back to the ADR in `links:`.
-- Keep status current: mark items `doing` when you start, `blocked` when waiting, `done` when complete.
-- Starting a task records and announces a claim (`claimed_by: <who> @ <where>`). Claims are attribution, not locks.
-- Never create task or question files manually — always go through `/opentasks` to keep the index in sync.
-```
+After installing the skill, run `/opentasks bootstrap` in your project. This creates `docs/tasks/` with a conventions `README.md` and an empty `TASK_INDEX.md`, and appends a standing "Task and question tracking" instruction block to `AGENTS.md` (and `CLAUDE.md` if present) so agents pick up the convention without being told each session. The exact block is defined in [SKILL.md › `bootstrap`](SKILL.md#bootstrap--init).
 
 ---
 
 ## How it works
 
-A populated example — every status, an answered question, priorities, dependencies, a claim, and a linked ADR — lives in [`examples/docs/tasks/`](examples/docs/tasks/).
+[`SKILL.md`](SKILL.md) is the canonical definition of the convention — operations, templates, frontmatter fields, status semantics, naming rules, and the index format live there and only there (see [ADR-0002](docs/adr/0002-skill-md-canonical.md)). What follows is the conceptual overview.
 
 ### Folder layout
 
@@ -137,101 +120,59 @@ docs/tasks/
 └── q<N>-<slug>.md       # One file per question, numbered
 ```
 
-Flat — no subfolders, no hidden state, no required CLI. One file per item. Closed items stay as history; never delete.
+Flat — no subfolders, no hidden state, no required CLI. One file per item. Closed items stay as history; never delete. Numbers are monotonic and never reused ([naming rules](SKILL.md#file-naming-rules)).
 
-### Two item types
+### Items, statuses, and the index
 
-**Tasks** track work. Frontmatter:
-```yaml
----
-status: todo            # todo | doing | blocked | done
-type: task
-id: T<N>                # stable task identifier, monotonic and never reused
-deliverable: D2         # project-specific bucket
-created: YYYY-MM-DD
-links: []               # optional related URLs or repo paths
-priority: p2            # optional: p1 | p2 | p3; treated as p2 when absent
-depends_on: []          # optional list of task IDs this task waits on, e.g. [T3, T7]
-started: YYYY-MM-DD     # added by start; kept on reopen
-claimed_by: who @ where # added by start; attribution, not a lock
-closed: YYYY-MM-DD      # only when done; removed on reopen
-output: path/to/file.md # only if the task produced an artifact
----
-```
+**Tasks** track work and carry a stable `T<N>` identifier; **questions** track open decisions and carry an `owner` who needs to answer. Each file's YAML frontmatter is the source of truth ([frontmatter reference](SKILL.md#frontmatter-reference)); `TASK_INDEX.md` is a derived checklist that `sync` rebuilds from scratch ([index format](SKILL.md#index--task_indexmd-format)).
 
-**Questions** track open decisions. Frontmatter:
-```yaml
----
-status: todo            # todo | blocked | done  (skip "doing")
-type: question
-owner: <name-or-role>
-created: YYYY-MM-DD
-closed: YYYY-MM-DD      # only when done
----
-```
+Items move `todo` → `doing` → `done`, with `blocked` for anything waiting; questions skip `doing` ([status semantics](SKILL.md#status-semantics)). Tasks close only when their `## Done when` criteria are satisfied or intentionally waived.
 
-### Status semantics
+Optional fields order and connect the work: `priority` (`p1`/`p2`/`p3`, absent means `p2`), `links` for related ADRs, PRs, or paths, and `depends_on` for machine-readable dependencies — a task is **ready** when it is `todo` and every dependency is `done`, and `/opentasks next` recommends the highest-priority ready task ([dependencies and readiness](SKILL.md#dependencies-and-readiness)). Starting a task records `claimed_by: <who> @ <where>` — attribution, not a lock; if two checkouts claim the same task, the git merge conflict is the signal.
 
-| Status    | Tasks                   | Questions              |
-|-----------|-------------------------|------------------------|
-| `todo`    | Not started             | Ready to ask           |
-| `doing`   | In progress             | Not valid              |
-| `blocked` | Waiting on dependency   | Waiting for an answer  |
-| `done`    | Completed               | Answered               |
+### A worked example
 
-### Task body essentials
-
-Task files include a `## Done when` section with concrete completion criteria. A task should only be closed when those criteria are satisfied or intentionally waived. Related issues, PRs, docs, branches, commits, or local paths can be recorded in the optional `links:` frontmatter list. An optional `priority: p1|p2|p3` field orders work — absent means `p2`. Machine-readable dependencies go in the optional `depends_on: [T3, T7]` list; a task is **ready** when it is `todo` and every dependency is `done` — `/opentasks next` recommends the highest-priority ready task. Unknown IDs, self-references, and cycles are validation errors. When a task is started, `claimed_by: <who> @ <where>` records which agent or person picked it up and where it is running, and the agent announces the claim in its reply — if two checkouts claim the same task, the git merge conflict is the signal.
-
-### Task sizing and agent behavior
-
-A task should be small enough for one focused agent session or one coherent PR. Good tasks have one objective, concrete `Done when` criteria, independent verification, and no unresolved design choice hidden inside the scope.
-
-Split a task when it has multiple outputs, multiple owners, unresolved decisions, or a title that naturally contains "and then." Do not create tasks for every tiny edit. Create them when work needs to survive chat context, coordinate across humans or agents, or show up in git history.
-
-Agents should create tasks when breaking down a user-approved plan, discovering follow-up work that should not be done immediately, finding a blocker or dependency, extracting implementation work from an ADR, or leaving continuation work for another human or agent. Agents should not create tasks merely to describe work they are already completing in the same turn.
-
-### ADRs and decision flow
-
-Use questions for unresolved decisions, ADRs for durable decisions, and tasks for execution:
-
-```text
-Q<N> -> ADR -> T<N>
-```
-
-- Open `Q<N>` when a decision is unresolved.
-- Create or update an ADR when the answer has architectural or long-lived consequences.
-- Close the question with the decision and link to the ADR.
-- Create tasks for the implementation work that follows from the ADR.
-- Link ADR-derived tasks back to the ADR using `links:`.
-- If a task uncovers a durable decision, open a question and block or split the task until the ADR resolves it.
-- If implementation shows the ADR is wrong or incomplete, open a new question instead of silently changing task scope.
-
-### Index format
-
-`TASK_INDEX.md` is a flat checklist grouped by deliverable (tasks) and owner (questions):
+A populated folder — every status, an answered question, priorities, dependencies, a claim, and a linked ADR — lives in [`examples/docs/tasks/`](examples/docs/tasks/). One in-progress task from it:
 
 ```markdown
-> Frontmatter is the source of truth. This index is a derived view.
+---
+status: doing
+type: task
+id: T2
+deliverable: D1
+created: 2026-05-22
+links: []
+depends_on: [T1]
+started: 2026-06-02
+claimed_by: luisa @ herbarium-main
+---
 
-## D1 — <Deliverable name>
+# T2. Build plant index page
 
-- [ ] [T1. Title](t1-slug.md) — `todo`
-- [ ] [T2. Title](t2-slug.md) — `blocked` (waiting on client data)
-- [x] [T3. Title](t3-slug.md) — `done` → path/to/output.md
+## Objective
+A browsable index of all plants, grouped by light needs — the main entry point of the site.
 
-## Open questions
+## What we need to extract / do
+- Template the index page over the plant collection.
+- Group entries by light requirement (full sun / partial / shade).
+- Add per-plant summary cards linking to detail pages.
 
-**For <person>:**
-- [ ] [Q1. The question?](q1-slug.md) — `todo`
+## Done when
+- The index lists every plant in the collection, grouped, with working links.
 
-**Answered (history):**
-- [x] [Q2. Another question?](q2-slug.md) — `done`
+## Output
+`site/index.njk` and the card partial.
 ```
 
-`[x]` only when `status: done`. Everything else uses `[ ]`, including `blocked`.
-Task lines include the stable task ID in the visible label, e.g. `T4. Implement cache`.
-Non-default priorities appear as a tag after the status (`` `todo` `p1` ``); the default `p2` is never shown.
+and its line in the derived `TASK_INDEX.md`:
+
+```markdown
+- [ ] [T2. Build plant index page](t2-build-plant-index-page.md) — `doing`
+```
+
+### Sizing, decisions, and ADRs
+
+A task should fit one focused agent session or one coherent PR; split work with multiple outputs, owners, or unresolved decisions ([task sizing and agent behavior](SKILL.md#task-sizing-and-agent-behavior)). Unresolved decisions become questions, durable decisions become ADRs, and execution becomes tasks — `Q<N> → ADR → T<N>` — with ADR-derived tasks linking back via `links:` ([ADRs and decision flow](SKILL.md#adrs-and-decision-flow)).
 
 ### Optional validation
 
@@ -242,9 +183,3 @@ scripts/opentasks-lint docs/tasks   # exits 1 with one finding per line
 ```
 
 Copy it into a repo (or vendor it however you like) to run in CI. The skill never requires it.
-
-### Naming conventions
-
-- Task slugs: `t<N>-<slug>`, e.g. `t1-llm-shortlist`, `t8-extract-analysis-scripts` — N is monotonic, never reused
-- Question slugs: `q<N>-<slug>`, e.g. `q1-classification-rubric` — N is monotonic, never reused
-- All filenames: lowercase ASCII, accents stripped, spaces → hyphens

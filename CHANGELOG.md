@@ -4,6 +4,12 @@ All notable changes to this project are tracked here.
 
 This project uses human-readable release notes.
 
+## Unreleased
+
+### Changed
+
+- `SKILL.md` is the canonical convention definition (ADR-0002): the README keeps positioning, installation, usage, and a conceptual overview, and links into `SKILL.md` for templates, frontmatter, statuses, naming, and the index format.
+
 ## 0.1.0 - 2026-06-11
 
 ### Added

@@ -1,11 +1,15 @@
 ---
-status: todo
+status: done
+started: 2026-06-12
+claimed_by: claude-code @ lu-macbook
 type: task
 id: T9
 deliverable: D3
 created: 2026-06-11
+closed: 2026-06-12
 links:
   - docs/adr/0002-skill-md-canonical.md
+output: README.md
 ---
 
 # T9. Make SKILL.md canonical; slim the README

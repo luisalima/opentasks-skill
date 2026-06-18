@@ -16,7 +16,7 @@
 ## D3 — Docs & examples
 
 - [x] [T8. Add `examples/` folder with a populated sample](t8-add-examples-folder.md) — `done` → examples/docs/tasks/
-- [ ] [T9. Make SKILL.md canonical; slim the README](t9-canonicalize-skill-md.md) — `todo`
+- [x] [T9. Make SKILL.md canonical; slim the README](t9-canonicalize-skill-md.md) — `done` → README.md
 - [x] [T10. Document how to update an installed skill](t10-document-skill-updates.md) — `done` → README.md
 
 ## Open questions

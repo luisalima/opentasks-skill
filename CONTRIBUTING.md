@@ -10,7 +10,7 @@ OpenTasks is a tiny repo convention and agent skill. Contributions should keep i
 - Improve agent instructions in `SKILL.md`.
 - Tighten examples without adding much length.
 - Add small validation or release docs.
-- Fix inconsistencies between `README.md` and `SKILL.md`.
+- Fix README prose or links that drifted from `SKILL.md` (the canonical definition — see [ADR-0002](docs/adr/0002-skill-md-canonical.md)).
 
 ## Usually out of scope
 
@@ -24,7 +24,7 @@ OpenTasks is a tiny repo convention and agent skill. Contributions should keep i
 
 1. Make a branch from `main`.
 2. Keep changes small and focused.
-3. Update both `README.md` and `SKILL.md` when the convention changes.
+3. Land normative convention changes (fields, statuses, templates, operations) in `SKILL.md` only; touch `README.md` just to keep its overview prose and links accurate.
 4. Run:
 
 ```bash
@@ -44,8 +44,8 @@ git diff --check
 ## Pull request checklist
 
 - The change keeps OpenTasks lightweight.
-- The README and skill instructions agree.
-- New task fields or status behavior are documented in both places.
+- Normative changes land in `SKILL.md`; README links into it remain valid.
+- New task fields or status behavior are documented in `SKILL.md` (and reflected in the README overview only if it mentions them).
 - `git diff --check` passes.
 - Any change affecting existing `docs/tasks/` folders extends the `migrate` operation in the same PR, and the PR describes the impact.
 
