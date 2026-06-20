@@ -42,6 +42,8 @@ Before executing any operation other than `bootstrap` / `init`, check whether `d
 
 A task should be small enough for one focused agent session or one coherent PR. Good tasks have one objective, concrete `Done when` criteria, independent verification, and no unresolved design choice hidden inside the scope.
 
+`Done when` must be **independently checkable** — it states how someone *other than the implementer* confirms success, so it must not merely restate the work ("implement X"). The verification mechanism is repo-dependent and there is no single required form: a test command, a lint or validation run, an assertable contract, or an observable artifact or behavior. For security-relevant tasks, `Done when` must include the **adversarial/negative** assertion (malicious input rejected, unauthorized request blocked), not only the happy path — the negative case is the load-bearing signal. When a concrete command or method exists, record it in the optional `verify:` frontmatter field; the field is a convenience pointer, not a requirement.
+
 Split a task when it has multiple outputs, multiple owners, unresolved decisions, or a title that naturally contains "and then." Do not create tasks for every tiny edit. Create them when work needs to survive chat context, coordinate across humans or agents, or show up in git history.
 
 Agents should create tasks when breaking down a user-approved plan, discovering follow-up work that should not be done immediately, finding a blocker or dependency, extracting implementation work from an ADR, or leaving continuation work for another human or agent. Agents should not create tasks merely to describe work they are already completing in the same turn.
@@ -119,7 +121,7 @@ links: []
 <Concrete bullets describing the actual work.>
 
 ## Done when
-- <Concrete, observable completion criterion.>
+- <An independently-checkable criterion — a command, a contract, or an observable behavior, in whatever form the repo supports; not a restatement of the work. For security-relevant work, include the adversarial/negative case (input rejected, request blocked), not only the success path.>
 
 ## Output
 <What gets produced and where it feeds into. Write "none" if the task produces no tracked artifact.>
@@ -353,6 +355,7 @@ created: YYYY-MM-DD
 links: []               # optional related URLs or repo paths
 priority: p2            # optional: p1 | p2 | p3; treated as p2 when absent
 depends_on: []          # optional list of task IDs this task waits on, e.g. [T3, T7]
+verify: <command>       # optional: how to confirm completion independently; form depends on the repo
 started: YYYY-MM-DD     # added by `claim`/`start`; kept on reopen as historical record
 claimed_by: who @ where # added by `claim`/`start`; attribution, not a lock
 closed: YYYY-MM-DD      # only when status = done; removed by `reopen`
@@ -380,8 +383,8 @@ Write the README in the same language as the project's documentation. It must in
 1. One-paragraph intro: this folder is a lightweight repo convention for both execution tasks and open questions using flat markdown + YAML frontmatter; item type is distinguished by the `type` frontmatter field.
 2. How it works: one file per item; frontmatter is the source of truth; `TASK_INDEX.md` is a derived view; tasks have stable `T<N>` identifiers.
 3. The four status values and what they mean for tasks vs questions (see table above).
-4. Type conventions: task vs question; what `owner` is for; what `links` is for; the optional `priority` field (`p1`/`p2`/`p3`, default `p2`); the optional `depends_on` list and the readiness rule (a task is ready when `todo` and all dependencies are `done`).
-5. Task sizing guidance: one focused agent session or one coherent PR; split work with multiple outputs, owners, unresolved decisions, or "and then" sequencing.
+4. Type conventions: task vs question; what `owner` is for; what `links` is for; the optional `priority` field (`p1`/`p2`/`p3`, default `p2`); the optional `depends_on` list and the readiness rule (a task is ready when `todo` and all dependencies are `done`); the optional `verify:` field (how to confirm completion independently, form repo-dependent).
+5. Task sizing guidance: one focused agent session or one coherent PR; split work with multiple outputs, owners, unresolved decisions, or "and then" sequencing. `Done when` must be independently checkable rather than a restatement of the work, and must include the adversarial/negative assertion for security-relevant tasks.
 6. Agent creation guidance: create tasks for user-approved plans, deferred follow-up work, blockers, ADR implementation work, and handoffs; do not create tasks merely to describe same-turn work.
 7. ADR and decision flow: `Q<N> -> ADR -> T<N>`, plus the reverse path when a task uncovers a durable decision; ADR-derived tasks link back to the ADR in `links:`.
 8. The full task body template as a fenced markdown block.

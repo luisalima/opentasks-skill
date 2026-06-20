@@ -28,6 +28,8 @@ This folder is a lightweight repo convention for tracking both execution tasks a
 
 A task should be small enough for one focused agent session or one coherent PR. Good tasks have one objective, concrete `Done when` criteria, independent verification, and no unresolved design choice hidden inside the scope.
 
+`Done when` must be independently checkable — it states how someone other than the implementer confirms success, so it must not merely restate the work, and the verification mechanism is repo-dependent (a test command, a lint or validation run, an assertable contract, or an observable behavior). For security-relevant tasks it must include the adversarial/negative assertion (input rejected, request blocked), not only the happy path. Record a concrete check in the optional `verify:` frontmatter field when one exists.
+
 Split a task when it has multiple outputs, multiple owners, unresolved decisions, or a title that naturally contains "and then." Do not create tasks for every tiny edit — create them when work needs to survive chat context, coordinate across humans or agents, or show up in git history.
 
 ## When agents create tasks
@@ -70,7 +72,7 @@ links: []
 <Concrete bullets describing the actual work.>
 
 ## Done when
-- <Concrete, observable completion criterion.>
+- <An independently-checkable criterion — a command, a contract, or an observable behavior, in whatever form the repo supports; not a restatement of the work. For security-relevant work, include the adversarial/negative case (input rejected, request blocked).>
 
 ## Output
 <What gets produced and where it feeds into. Write "none" if the task produces no tracked artifact.>
