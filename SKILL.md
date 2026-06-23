@@ -42,9 +42,11 @@ Before executing any operation other than `bootstrap` / `init`, check whether `d
 
 A task should be small enough for one focused agent session or one coherent PR. Good tasks have one objective, concrete `Done when` criteria, independent verification, and no unresolved design choice hidden inside the scope.
 
+`Done when` must be **independently checkable** — it states how someone *other than the implementer* confirms success, so it must not merely restate the work ("implement X"). The verification mechanism is repo-dependent and there is no single required form: a test command, a lint or validation run, an assertable contract, or an observable artifact or behavior. For security-relevant tasks, `Done when` must include the **adversarial/negative** assertion (malicious input rejected, unauthorized request blocked), not only the happy path — the negative case is the load-bearing signal. When a concrete command or method exists, record it in the optional `verify:` frontmatter field; the field is a convenience pointer, not a requirement.
+
 Split a task when it has multiple outputs, multiple owners, unresolved decisions, or a title that naturally contains "and then." Do not create tasks for every tiny edit. Create them when work needs to survive chat context, coordinate across humans or agents, or show up in git history.
 
-Agents should create tasks when breaking down a user-approved plan, discovering follow-up work that should not be done immediately, finding a blocker or dependency, extracting implementation work from an ADR, or leaving continuation work for another human or agent. Agents should not create tasks merely to describe work they are already completing in the same turn.
+Agents should create tasks when breaking down a user-approved plan, discovering follow-up work that should not be done immediately, finding a blocker or dependency, extracting implementation work from an ADR, or leaving continuation work for another human or agent. Agents should not create tasks merely to describe work they are already completing in the same turn. When a task is spawned from a review or a finding (a security review, an audit, a code-review comment), record its source — the report path, PR, or finding id — in `links:` so the provenance is traceable.
 
 ## ADRs and decision flow
 
@@ -61,6 +63,7 @@ Q<N> -> ADR -> T<N>
 - Link ADR-derived tasks back to the ADR using `links:`.
 - If a task uncovers a durable decision, open a question and block or split the task until the ADR resolves it.
 - If implementation shows the ADR is wrong or incomplete, open a new question instead of silently changing task scope.
+- A task whose blocker is an open decision references that question in `blocked_by: Q<N>` and stays `autonomy: human` until the question closes — this keeps the decision flow and the automation gate consistent. `blocked_by` is the normative decision link; freeform `links:` stays for general provenance.
 
 ---
 
@@ -119,7 +122,7 @@ links: []
 <Concrete bullets describing the actual work.>
 
 ## Done when
-- <Concrete, observable completion criterion.>
+- <An independently-checkable criterion — a command, a contract, or an observable behavior, in whatever form the repo supports; not a restatement of the work. For security-relevant work, include the adversarial/negative case (input rejected, request blocked), not only the success path.>
 
 ## Output
 <What gets produced and where it feeds into. Write "none" if the task produces no tracked artifact.>
@@ -246,7 +249,7 @@ Recommend the next task to pick up — answers "what should I work on?" determin
 1. Read frontmatter from every task file. If a deliverable argument is given (e.g. `next D1`), consider only tasks in that bucket.
 2. Collect the **ready** tasks: `status: todo` with every ID in `depends_on` `done` (see **Dependencies and readiness**).
 3. Pick the highest-priority ready task (`p1` before `p2` before `p3`; absent counts as `p2`). Break ties by lowest task number.
-4. Report the pick: ID, title, file, and why it was chosen — its priority and which dependencies are satisfied. List the runners-up briefly, one line each, in the same priority-then-number order. Suggest `/opentasks start T<N>` to claim it and begin, or `/opentasks claim T<N>` to just reserve it.
+4. Report the pick: ID, title, file, and why it was chosen — its priority, which dependencies are satisfied, and whether it is auto-eligible (`autonomy: auto` with no open `blocked_by`) or needs a human. List the runners-up briefly, one line each, in the same priority-then-number order. Suggest `/opentasks start T<N>` to claim it and begin, or `/opentasks claim T<N>` to just reserve it.
 5. If no task is ready, say so, and show the highest-priority non-ready open task (same ordering) with what blocks it: its unmet `depends_on` IDs with their statuses, or its `## Blocker` section if it is `blocked`. If there are no open tasks at all, say so.
 
 ---
@@ -281,9 +284,13 @@ classDef missing fill:#ffffff,stroke:#e03131,stroke-dasharray: 2 2,color:#e03131
 Rebuild `TASK_INDEX.md` from scratch by reading all files in `docs/tasks/`.
 1. Read frontmatter from every `*.md` file except `README.md` and `TASK_INDEX.md`.
 2. Group `type: task` files by `deliverable`; group `type: question` files by `owner`. Prefer the task `id` field for labels and sorting; fall back to the filename only for legacy task files.
-3. For backward compatibility, treat files with no `type` and a `deliverable` as tasks, but report them as frontmatter mismatches. Also report task files missing `id: T<N>` as legacy task files that should be migrated, and report `priority` values outside `p1`/`p2`/`p3` as mismatches. Validate `depends_on`: unknown task IDs, self-references, and cycles are mismatches.
+3. For backward compatibility, treat files with no `type` and a `deliverable` as tasks, but report them as frontmatter mismatches. Also report task files missing `id: T<N>` as legacy task files that should be migrated, and report `priority` values outside `p1`/`p2`/`p3` as mismatches. Validate `depends_on`: unknown task IDs, self-references, and cycles are mismatches. Validate `blocked_by`: an unknown question ID is a mismatch. Validate `autonomy`: a value other than `auto`/`human` is a mismatch, as is `autonomy: auto` on a task with an unanswered `blocked_by`.
 4. Emit the full index in the format defined in **§INDEX**.
-5. Frontmatter is the source of truth — discard the old index content entirely, with one exception: if the old index had a `## Dependency graph` section (created by `graph write`), regenerate it with the rules from **`graph`** and keep it at the end of the file.
+5. Frontmatter is the source of truth — **derive, never preserve**: discard the old index content entirely and regenerate every section from frontmatter. Curated views are kept by regenerating them, not by honoring hand-edits, so they cannot drift:
+   - `## Dependency graph` (created by `graph write`) — regenerate with the rules from **`graph`** when the section is present. This also encodes execution **ordering** (prerequisite → dependent), so no manual "execution order" section is ever needed.
+   - `## Automation` — when the section is present, regenerate it as the list of **auto-eligible** tasks (`autonomy: auto`, ready, no open `blocked_by`). The auto/human split is derived from `autonomy`, never hand-maintained.
+
+   A derived section is opt-in: add the bare header once and `sync` maintains it on every run; delete the header to stop. If genuinely manual prose must live in the index, put it in a single region delimited by `<!-- manual:start -->` and `<!-- manual:end -->`, which `sync` preserves verbatim; everything outside such a region is regenerated.
 
 ---
 
@@ -305,8 +312,9 @@ When a future convention change affects existing files, its upgrade steps must b
 ### `status` (default when no argument given)
 Read `TASK_INDEX.md` (or scan `docs/tasks/` if the index is absent) and report:
 - Count of items by status: todo / doing / blocked / done.
+- Count of auto-eligible tasks (`autonomy: auto`, ready, and no open `blocked_by`).
 - All `doing` and `blocked` items with their blockers.
-- Any frontmatter/index mismatches spotted, including missing `type`, invalid statuses, questions marked `doing`, tasks missing `id`, tasks missing `deliverable`, questions missing `owner`, duplicate task IDs, duplicate question numbers, malformed `links`, invalid `priority` values, invalid `depends_on` references (unknown IDs, self-references, cycles), `doing` tasks whose dependencies are not `done`, and stale index lines.
+- Any frontmatter/index mismatches spotted, including missing `type`, invalid statuses, questions marked `doing`, tasks missing `id`, tasks missing `deliverable`, questions missing `owner`, duplicate task IDs, duplicate question numbers, malformed `links`, invalid `priority` values, invalid `depends_on` references (unknown IDs, self-references, cycles), `doing` tasks whose dependencies are not `done`, invalid `blocked_by` references (unknown question IDs), invalid `autonomy` values (anything other than `auto`/`human`), tasks marked `autonomy: auto` with an unanswered `blocked_by`, and stale index lines.
 
 ---
 
@@ -336,7 +344,27 @@ Tasks may declare machine-readable dependencies in `depends_on:` — a YAML list
 
 A task is **ready** when `status: todo` and every task in `depends_on` is `done`. The `next` operation picks among ready tasks.
 
+`depends_on` tracks prerequisite *tasks*; the separate optional `blocked_by: Q<N>` points at an open *question* (a decision) that gates the task. A task with an unanswered `blocked_by` stays `autonomy: human` and is not eligible for unattended execution.
+
 `sync` and `status` validate `depends_on`: unknown task IDs, self-references, and dependency cycles are frontmatter mismatches. `status` also flags `doing` tasks whose dependencies are not all `done`.
+
+---
+
+## Autonomy and unattended execution
+
+`autonomy:` marks whether an agent or driver may execute a task without a human in the loop:
+
+- `autonomy: auto` — safe to pick up and run unattended.
+- `autonomy: human` — needs a person: an open decision, an audit, or something too large or risky. **`human` is the default** when the field is absent.
+
+A task is **auto-eligible** only when all of these hold:
+
+- `autonomy: auto`;
+- `status: todo` and it is **ready** (every `depends_on` is `done`);
+- no open decision gates it (`blocked_by` absent, or its question is `done`);
+- its `Done when` is concrete and independently checkable (see [task sizing and agent behavior](#task-sizing-and-agent-behavior)) — including the adversarial/negative assertion for security-relevant tasks.
+
+The first three conditions are structural and checked by `sync`/`status`; the last is a judgment the task's author makes before setting `autonomy: auto`. `status` reports the count of auto-eligible tasks, and `next` notes whether its recommended task is auto-eligible. Setting `autonomy: auto` on a task with an unanswered `blocked_by` is a mismatch — resolve the decision or keep it `human`.
 
 ---
 
@@ -352,7 +380,10 @@ deliverable: D2         # project-specific bucket
 created: YYYY-MM-DD
 links: []               # optional related URLs or repo paths
 priority: p2            # optional: p1 | p2 | p3; treated as p2 when absent
+autonomy: human         # optional: auto | human; absent means human (needs a person)
 depends_on: []          # optional list of task IDs this task waits on, e.g. [T3, T7]
+verify: <command>       # optional: how to confirm completion independently; form depends on the repo
+blocked_by: Q<N>        # optional: an open question that gates this task; keep autonomy: human until it closes
 started: YYYY-MM-DD     # added by `claim`/`start`; kept on reopen as historical record
 claimed_by: who @ where # added by `claim`/`start`; attribution, not a lock
 closed: YYYY-MM-DD      # only when status = done; removed by `reopen`
@@ -380,9 +411,9 @@ Write the README in the same language as the project's documentation. It must in
 1. One-paragraph intro: this folder is a lightweight repo convention for both execution tasks and open questions using flat markdown + YAML frontmatter; item type is distinguished by the `type` frontmatter field.
 2. How it works: one file per item; frontmatter is the source of truth; `TASK_INDEX.md` is a derived view; tasks have stable `T<N>` identifiers.
 3. The four status values and what they mean for tasks vs questions (see table above).
-4. Type conventions: task vs question; what `owner` is for; what `links` is for; the optional `priority` field (`p1`/`p2`/`p3`, default `p2`); the optional `depends_on` list and the readiness rule (a task is ready when `todo` and all dependencies are `done`).
-5. Task sizing guidance: one focused agent session or one coherent PR; split work with multiple outputs, owners, unresolved decisions, or "and then" sequencing.
-6. Agent creation guidance: create tasks for user-approved plans, deferred follow-up work, blockers, ADR implementation work, and handoffs; do not create tasks merely to describe same-turn work.
+4. Type conventions: task vs question; what `owner` is for; what `links` is for; the optional `priority` field (`p1`/`p2`/`p3`, default `p2`); the optional `depends_on` list and the readiness rule (a task is ready when `todo` and all dependencies are `done`); the optional `verify:` field (how to confirm completion independently, form repo-dependent); the optional `blocked_by:` field (a question id that gates the task); the optional `autonomy:` field (`auto`/`human`, default `human`) and the bar a task clears to be `auto`-eligible.
+5. Task sizing guidance: one focused agent session or one coherent PR; split work with multiple outputs, owners, unresolved decisions, or "and then" sequencing. `Done when` must be independently checkable rather than a restatement of the work, and must include the adversarial/negative assertion for security-relevant tasks.
+6. Agent creation guidance: create tasks for user-approved plans, deferred follow-up work, blockers, ADR implementation work, and handoffs; do not create tasks merely to describe same-turn work; record the source (report path, PR, or finding id) in `links:` when a task is spawned from a review or finding.
 7. ADR and decision flow: `Q<N> -> ADR -> T<N>`, plus the reverse path when a task uncovers a durable decision; ADR-derived tasks link back to the ADR in `links:`.
 8. The full task body template as a fenced markdown block.
 9. The full question body template as a fenced markdown block.
@@ -426,4 +457,5 @@ Rules:
 - Non-default priorities appear as a tag after the status: `` `todo` `p1` ``. Default `p2` is never shown.
 - Append `→ path/to/output` for `done` tasks that produced a tracked artifact.
 - Closed files are never deleted — they remain in the folder and in the index as history.
-- An optional `## Dependency graph` section (created by `graph write`) may close the file; `sync` regenerates it from `depends_on` frontmatter.
+- An optional `## Dependency graph` section (created by `graph write`) may close the file; `sync` regenerates it from `depends_on` frontmatter, which also encodes execution ordering.
+- An optional `## Automation` section may list the auto-eligible tasks; `sync` regenerates it from `autonomy` frontmatter when present. Both views are **derived** — never hand-edit them. Any unavoidable manual prose lives in a single `<!-- manual:start -->` / `<!-- manual:end -->` region that `sync` preserves verbatim.

@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 type: task
 id: T12
 deliverable: D1
@@ -7,6 +7,10 @@ created: 2026-06-20
 links:
   - docs/feedback/multi-agent-automation-feedback.md
 priority: p1
+started: 2026-06-20
+claimed_by: claude-code @ claude-the-tasks-folder
+closed: 2026-06-20
+output: SKILL.md
 ---
 
 # T12. Make `Done when` independently verifiable; add optional `verify:` field

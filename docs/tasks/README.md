@@ -23,16 +23,20 @@ This folder is a lightweight repo convention for tracking both execution tasks a
 - **Tasks** (`type: task`) track work. They carry an `id: T<N>`, a `deliverable` bucket, and optional `links:` to related URLs, repo paths, or ADRs.
 - **Questions** (`type: question`) track unresolved decisions. They carry an `owner` — the person or role who needs to answer.
 - `links:` records related issues, PRs, docs, branches, or ADR paths. ADR-derived tasks link back to their ADR here.
+- `blocked_by: Q<N>` (optional) ties a task to the open question that gates it; the task stays `autonomy: human` until that question closes.
+- `autonomy:` (optional, `auto`/`human`, default `human`) marks whether an agent may run the task unattended. A task is `auto`-eligible only when it is `auto`, `todo` and ready, has no open `blocked_by`, and has a concrete independently-checkable `Done when`.
 
 ## Task sizing
 
 A task should be small enough for one focused agent session or one coherent PR. Good tasks have one objective, concrete `Done when` criteria, independent verification, and no unresolved design choice hidden inside the scope.
 
+`Done when` must be independently checkable — it states how someone other than the implementer confirms success, so it must not merely restate the work, and the verification mechanism is repo-dependent (a test command, a lint or validation run, an assertable contract, or an observable behavior). For security-relevant tasks it must include the adversarial/negative assertion (input rejected, request blocked), not only the happy path. Record a concrete check in the optional `verify:` frontmatter field when one exists.
+
 Split a task when it has multiple outputs, multiple owners, unresolved decisions, or a title that naturally contains "and then." Do not create tasks for every tiny edit — create them when work needs to survive chat context, coordinate across humans or agents, or show up in git history.
 
 ## When agents create tasks
 
-Agents should create tasks when breaking down a user-approved plan, discovering follow-up work that should not be done immediately, finding a blocker or dependency, extracting implementation work from an ADR, or leaving continuation work for another human or agent. Agents should not create tasks merely to describe work they are already completing in the same turn.
+Agents should create tasks when breaking down a user-approved plan, discovering follow-up work that should not be done immediately, finding a blocker or dependency, extracting implementation work from an ADR, or leaving continuation work for another human or agent. Agents should not create tasks merely to describe work they are already completing in the same turn. When a task is spawned from a review or a finding, record its source — the report path, PR, or finding id — in `links:` so the provenance is traceable.
 
 ## ADRs and decision flow
 
@@ -70,7 +74,7 @@ links: []
 <Concrete bullets describing the actual work.>
 
 ## Done when
-- <Concrete, observable completion criterion.>
+- <An independently-checkable criterion — a command, a contract, or an observable behavior, in whatever form the repo supports; not a restatement of the work. For security-relevant work, include the adversarial/negative case (input rejected, request blocked).>
 
 ## Output
 <What gets produced and where it feeds into. Write "none" if the task produces no tracked artifact.>

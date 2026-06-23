@@ -129,7 +129,7 @@ Flat — no subfolders, no hidden state, no required CLI. One file per item. Clo
 
 Items move `todo` → `doing` → `done`, with `blocked` for anything waiting; questions skip `doing` ([status semantics](SKILL.md#status-semantics)). Tasks close only when their `## Done when` criteria are satisfied or intentionally waived.
 
-Optional fields order and connect the work: `priority` (`p1`/`p2`/`p3`, absent means `p2`), `links` for related ADRs, PRs, or paths, and `depends_on` for machine-readable dependencies — a task is **ready** when it is `todo` and every dependency is `done`, and `/opentasks next` recommends the highest-priority ready task ([dependencies and readiness](SKILL.md#dependencies-and-readiness)). Starting a task records `claimed_by: <who> @ <where>` — attribution, not a lock; if two checkouts claim the same task, the git merge conflict is the signal.
+Optional fields order and connect the work: `priority` (`p1`/`p2`/`p3`, absent means `p2`), `links` for related ADRs, PRs, or paths, `depends_on` for machine-readable task dependencies, `verify` for an independent completion check, `blocked_by` to tie a task to the open question that gates it, and `autonomy` (`auto`/`human`, default `human`) to gate unattended execution — a task is **ready** when it is `todo` and every dependency is `done`, and `/opentasks next` recommends the highest-priority ready task ([dependencies and readiness](SKILL.md#dependencies-and-readiness)). Starting a task records `claimed_by: <who> @ <where>` — attribution, not a lock; if two checkouts claim the same task, the git merge conflict is the signal.
 
 ### A worked example
 
@@ -173,7 +173,7 @@ and its line in the derived `TASK_INDEX.md`:
 
 ### Sizing, decisions, and ADRs
 
-A task should fit one focused agent session or one coherent PR; split work with multiple outputs, owners, or unresolved decisions ([task sizing and agent behavior](SKILL.md#task-sizing-and-agent-behavior)). Unresolved decisions become questions, durable decisions become ADRs, and execution becomes tasks — `Q<N> → ADR → T<N>` — with ADR-derived tasks linking back via `links:` ([ADRs and decision flow](SKILL.md#adrs-and-decision-flow)).
+A task should fit one focused agent session or one coherent PR; split work with multiple outputs, owners, or unresolved decisions ([task sizing and agent behavior](SKILL.md#task-sizing-and-agent-behavior)). Its `## Done when` must be independently checkable rather than a restatement of the work — and for security-relevant tasks must assert the adversarial/negative case (input rejected, request blocked), not only the happy path. Unresolved decisions become questions, durable decisions become ADRs, and execution becomes tasks — `Q<N> → ADR → T<N>` — with ADR-derived tasks linking back via `links:` — where tasks spawned from a review or finding also record their source (report path, PR, or finding id) ([ADRs and decision flow](SKILL.md#adrs-and-decision-flow)).
 
 ### Optional validation
 

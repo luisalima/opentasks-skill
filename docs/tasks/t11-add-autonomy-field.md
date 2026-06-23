@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 type: task
 id: T11
 deliverable: D1
@@ -8,6 +8,10 @@ links:
   - docs/feedback/multi-agent-automation-feedback.md
 priority: p1
 depends_on: [T12, T13]
+started: 2026-06-23
+claimed_by: claude-code @ claude-the-tasks-folder
+closed: 2026-06-23
+output: SKILL.md
 ---
 
 # T11. Add `autonomy:` frontmatter field

@@ -1,11 +1,15 @@
 ---
-status: todo
+status: done
 type: task
 id: T13
 deliverable: D1
 created: 2026-06-20
 links:
   - docs/feedback/multi-agent-automation-feedback.md
+started: 2026-06-23
+claimed_by: claude-code @ claude-the-tasks-folder
+closed: 2026-06-23
+output: SKILL.md
 ---
 
 # T13. Add optional `blocked_by:` to tie a human task to its open decision
