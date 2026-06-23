@@ -129,7 +129,7 @@ Flat — no subfolders, no hidden state, no required CLI. One file per item. Clo
 
 Items move `todo` → `doing` → `done`, with `blocked` for anything waiting; questions skip `doing` ([status semantics](SKILL.md#status-semantics)). Tasks close only when their `## Done when` criteria are satisfied or intentionally waived.
 
-Optional fields order and connect the work: `priority` (`p1`/`p2`/`p3`, absent means `p2`), `links` for related ADRs, PRs, or paths, `depends_on` for machine-readable task dependencies, `verify` for an independent completion check, and `blocked_by` to tie a task to the open question that gates it — a task is **ready** when it is `todo` and every dependency is `done`, and `/opentasks next` recommends the highest-priority ready task ([dependencies and readiness](SKILL.md#dependencies-and-readiness)). Starting a task records `claimed_by: <who> @ <where>` — attribution, not a lock; if two checkouts claim the same task, the git merge conflict is the signal.
+Optional fields order and connect the work: `priority` (`p1`/`p2`/`p3`, absent means `p2`), `links` for related ADRs, PRs, or paths, `depends_on` for machine-readable task dependencies, `verify` for an independent completion check, `blocked_by` to tie a task to the open question that gates it, and `autonomy` (`auto`/`human`, default `human`) to gate unattended execution — a task is **ready** when it is `todo` and every dependency is `done`, and `/opentasks next` recommends the highest-priority ready task ([dependencies and readiness](SKILL.md#dependencies-and-readiness)). Starting a task records `claimed_by: <who> @ <where>` — attribution, not a lock; if two checkouts claim the same task, the git merge conflict is the signal.
 
 ### A worked example
 

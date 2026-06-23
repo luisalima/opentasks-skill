@@ -7,7 +7,7 @@
 - [x] [T3. Add `next` operation](t3-add-next-operation.md) — `done` → SKILL.md
 - [x] [T4. Add `claimed_by:` attribution to `start`](t4-add-claimed-by-attribution.md) — `done` → SKILL.md
 - [x] [T5. Add `graph` operation (Mermaid)](t5-add-graph-operation.md) — `done` → SKILL.md
-- [ ] [T11. Add `autonomy:` frontmatter field](t11-add-autonomy-field.md) — `todo` `p1`
+- [x] [T11. Add `autonomy:` frontmatter field](t11-add-autonomy-field.md) — `done` `p1` → SKILL.md
 - [x] [T12. Make `Done when` independently verifiable; add `verify:` field](t12-verifiable-done-when.md) — `done` `p1` → SKILL.md
 - [x] [T13. Add `blocked_by:` to tie a human task to its open decision](t13-add-blocked-by-field.md) — `done` → SKILL.md
 
@@ -37,7 +37,7 @@ graph TD
     T2["T2. Add depends_on: frontmatter field"]:::done
     T3["T3. Add next operation"]:::done
     T5["T5. Add graph operation (Mermaid)"]:::done
-    T11["T11. Add autonomy: frontmatter field"]:::todo
+    T11["T11. Add autonomy: frontmatter field"]:::done
     T12["T12. Make Done when independently verifiable; add verify: field"]:::done
     T13["T13. Add blocked_by: to tie a human task to its open decision"]:::done
     T14["T14. Teach sync to derive curated sections instead of clobbering them"]:::todo

@@ -24,6 +24,7 @@ This folder is a lightweight repo convention for tracking both execution tasks a
 - **Questions** (`type: question`) track unresolved decisions. They carry an `owner` — the person or role who needs to answer.
 - `links:` records related issues, PRs, docs, branches, or ADR paths. ADR-derived tasks link back to their ADR here.
 - `blocked_by: Q<N>` (optional) ties a task to the open question that gates it; the task stays `autonomy: human` until that question closes.
+- `autonomy:` (optional, `auto`/`human`, default `human`) marks whether an agent may run the task unattended. A task is `auto`-eligible only when it is `auto`, `todo` and ready, has no open `blocked_by`, and has a concrete independently-checkable `Done when`.
 
 ## Task sizing
 

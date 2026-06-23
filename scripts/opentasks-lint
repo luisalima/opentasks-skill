@@ -15,6 +15,7 @@ from pathlib import Path
 
 STATUSES = {"todo", "doing", "blocked", "done"}
 PRIORITIES = {"p1", "p2", "p3"}
+AUTONOMY = {"auto", "human"}
 TASK_FILE = re.compile(r"^t(\d+)-[a-z0-9-]+\.md$")
 QUESTION_FILE = re.compile(r"^q(\d+)-[a-z0-9-]+\.md$")
 TASK_ID = re.compile(r"^T(\d+)$")
@@ -112,6 +113,7 @@ def check_items(folder, findings):
             findings.append(f"{name}: missing or unknown type {itype!r}")
     check_dependencies(items, task_ids, findings)
     check_blocked_by(items, question_nums, findings)
+    check_autonomy(items, question_nums, findings)
     return items
 
 
@@ -126,6 +128,25 @@ def check_blocked_by(items, question_nums, findings):
         m = QUESTION_ID.match(raw)
         if not m or m.group(1) not in question_nums:
             findings.append(f"{name}: blocked_by references unknown question {raw!r}")
+
+
+def check_autonomy(items, question_nums, findings):
+    for name, fm in items.items():
+        auto = fm.get("autonomy")
+        if auto is None:
+            continue
+        if auto not in AUTONOMY:
+            findings.append(f"{name}: invalid autonomy {auto!r}")
+            continue
+        if auto != "auto":
+            continue
+        bb = fm.get("blocked_by")
+        if not isinstance(bb, str):
+            continue
+        m = QUESTION_ID.match(bb)
+        if m and m.group(1) in question_nums:
+            if items[question_nums[m.group(1)]].get("status") != "done":
+                findings.append(f"{name}: autonomy auto but blocked_by {bb} is unanswered")
 
 
 def check_dependencies(items, task_ids, findings):
