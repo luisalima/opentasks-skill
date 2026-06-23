@@ -15,7 +15,7 @@
 
 - [x] [T6. Add `migrate` operation](t6-add-migrate-operation.md) — `done` → SKILL.md
 - [x] [T7. Add optional validation script](t7-add-validation-script.md) — `done` → scripts/opentasks-lint
-- [ ] [T14. Teach `sync` to derive curated sections instead of clobbering them](t14-sync-derive-sections.md) — `todo`
+- [x] [T14. Teach `sync` to derive curated sections instead of clobbering them](t14-sync-derive-sections.md) — `done` → SKILL.md
 
 ## D3 — Docs & examples
 
@@ -40,7 +40,7 @@ graph TD
     T11["T11. Add autonomy: frontmatter field"]:::done
     T12["T12. Make Done when independently verifiable; add verify: field"]:::done
     T13["T13. Add blocked_by: to tie a human task to its open decision"]:::done
-    T14["T14. Teach sync to derive curated sections instead of clobbering them"]:::todo
+    T14["T14. Teach sync to derive curated sections instead of clobbering them"]:::done
     T1 --> T3
     T2 --> T3
     T2 --> T5

@@ -15,6 +15,7 @@ This project uses human-readable release notes.
 
 ### Changed
 
+- `sync` now follows a **derive-over-preserve** rule: it regenerates every curated index view from frontmatter (the dependency graph, which also encodes ordering, and an optional `## Automation` auto/human split) rather than preserving hand-edits, so no manual "execution order" or "autonomy" section is needed. Genuinely manual prose can live in a `<!-- manual:start -->`/`<!-- manual:end -->` region that `sync` keeps verbatim.
 - `Done when` guidance strengthened: criteria must be independently checkable rather than a restatement of the work, and security-relevant tasks must assert the adversarial/negative case, not only the happy path.
 - `start <item>` now claims the task **and** begins executing it in the same turn; previously it only recorded the claim.
 - `SKILL.md` is the canonical convention definition (ADR-0002): the README keeps positioning, installation, usage, and a conceptual overview, and links into `SKILL.md` for templates, frontmatter, statuses, naming, and the index format.

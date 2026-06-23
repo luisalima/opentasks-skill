@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 type: task
 id: T14
 deliverable: D2
@@ -7,6 +7,10 @@ created: 2026-06-20
 links:
   - docs/feedback/multi-agent-automation-feedback.md
 depends_on: [T11]
+started: 2026-06-23
+claimed_by: claude-code @ claude-the-tasks-folder
+closed: 2026-06-23
+output: SKILL.md
 ---
 
 # T14. Teach `sync` to derive curated sections instead of clobbering them

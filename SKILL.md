@@ -286,7 +286,11 @@ Rebuild `TASK_INDEX.md` from scratch by reading all files in `docs/tasks/`.
 2. Group `type: task` files by `deliverable`; group `type: question` files by `owner`. Prefer the task `id` field for labels and sorting; fall back to the filename only for legacy task files.
 3. For backward compatibility, treat files with no `type` and a `deliverable` as tasks, but report them as frontmatter mismatches. Also report task files missing `id: T<N>` as legacy task files that should be migrated, and report `priority` values outside `p1`/`p2`/`p3` as mismatches. Validate `depends_on`: unknown task IDs, self-references, and cycles are mismatches. Validate `blocked_by`: an unknown question ID is a mismatch. Validate `autonomy`: a value other than `auto`/`human` is a mismatch, as is `autonomy: auto` on a task with an unanswered `blocked_by`.
 4. Emit the full index in the format defined in **§INDEX**.
-5. Frontmatter is the source of truth — discard the old index content entirely, with one exception: if the old index had a `## Dependency graph` section (created by `graph write`), regenerate it with the rules from **`graph`** and keep it at the end of the file.
+5. Frontmatter is the source of truth — **derive, never preserve**: discard the old index content entirely and regenerate every section from frontmatter. Curated views are kept by regenerating them, not by honoring hand-edits, so they cannot drift:
+   - `## Dependency graph` (created by `graph write`) — regenerate with the rules from **`graph`** when the section is present. This also encodes execution **ordering** (prerequisite → dependent), so no manual "execution order" section is ever needed.
+   - `## Automation` — when the section is present, regenerate it as the list of **auto-eligible** tasks (`autonomy: auto`, ready, no open `blocked_by`). The auto/human split is derived from `autonomy`, never hand-maintained.
+
+   A derived section is opt-in: add the bare header once and `sync` maintains it on every run; delete the header to stop. If genuinely manual prose must live in the index, put it in a single region delimited by `<!-- manual:start -->` and `<!-- manual:end -->`, which `sync` preserves verbatim; everything outside such a region is regenerated.
 
 ---
 
@@ -453,4 +457,5 @@ Rules:
 - Non-default priorities appear as a tag after the status: `` `todo` `p1` ``. Default `p2` is never shown.
 - Append `→ path/to/output` for `done` tasks that produced a tracked artifact.
 - Closed files are never deleted — they remain in the folder and in the index as history.
-- An optional `## Dependency graph` section (created by `graph write`) may close the file; `sync` regenerates it from `depends_on` frontmatter.
+- An optional `## Dependency graph` section (created by `graph write`) may close the file; `sync` regenerates it from `depends_on` frontmatter, which also encodes execution ordering.
+- An optional `## Automation` section may list the auto-eligible tasks; `sync` regenerates it from `autonomy` frontmatter when present. Both views are **derived** — never hand-edit them. Any unavoidable manual prose lives in a single `<!-- manual:start -->` / `<!-- manual:end -->` region that `sync` preserves verbatim.
