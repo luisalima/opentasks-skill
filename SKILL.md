@@ -63,6 +63,7 @@ Q<N> -> ADR -> T<N>
 - Link ADR-derived tasks back to the ADR using `links:`.
 - If a task uncovers a durable decision, open a question and block or split the task until the ADR resolves it.
 - If implementation shows the ADR is wrong or incomplete, open a new question instead of silently changing task scope.
+- A task whose blocker is an open decision references that question in `blocked_by: Q<N>` and stays `autonomy: human` until the question closes — this keeps the decision flow and the automation gate consistent. `blocked_by` is the normative decision link; freeform `links:` stays for general provenance.
 
 ---
 
@@ -283,7 +284,7 @@ classDef missing fill:#ffffff,stroke:#e03131,stroke-dasharray: 2 2,color:#e03131
 Rebuild `TASK_INDEX.md` from scratch by reading all files in `docs/tasks/`.
 1. Read frontmatter from every `*.md` file except `README.md` and `TASK_INDEX.md`.
 2. Group `type: task` files by `deliverable`; group `type: question` files by `owner`. Prefer the task `id` field for labels and sorting; fall back to the filename only for legacy task files.
-3. For backward compatibility, treat files with no `type` and a `deliverable` as tasks, but report them as frontmatter mismatches. Also report task files missing `id: T<N>` as legacy task files that should be migrated, and report `priority` values outside `p1`/`p2`/`p3` as mismatches. Validate `depends_on`: unknown task IDs, self-references, and cycles are mismatches.
+3. For backward compatibility, treat files with no `type` and a `deliverable` as tasks, but report them as frontmatter mismatches. Also report task files missing `id: T<N>` as legacy task files that should be migrated, and report `priority` values outside `p1`/`p2`/`p3` as mismatches. Validate `depends_on`: unknown task IDs, self-references, and cycles are mismatches. Validate `blocked_by`: an unknown question ID is a mismatch.
 4. Emit the full index in the format defined in **§INDEX**.
 5. Frontmatter is the source of truth — discard the old index content entirely, with one exception: if the old index had a `## Dependency graph` section (created by `graph write`), regenerate it with the rules from **`graph`** and keep it at the end of the file.
 
@@ -308,7 +309,7 @@ When a future convention change affects existing files, its upgrade steps must b
 Read `TASK_INDEX.md` (or scan `docs/tasks/` if the index is absent) and report:
 - Count of items by status: todo / doing / blocked / done.
 - All `doing` and `blocked` items with their blockers.
-- Any frontmatter/index mismatches spotted, including missing `type`, invalid statuses, questions marked `doing`, tasks missing `id`, tasks missing `deliverable`, questions missing `owner`, duplicate task IDs, duplicate question numbers, malformed `links`, invalid `priority` values, invalid `depends_on` references (unknown IDs, self-references, cycles), `doing` tasks whose dependencies are not `done`, and stale index lines.
+- Any frontmatter/index mismatches spotted, including missing `type`, invalid statuses, questions marked `doing`, tasks missing `id`, tasks missing `deliverable`, questions missing `owner`, duplicate task IDs, duplicate question numbers, malformed `links`, invalid `priority` values, invalid `depends_on` references (unknown IDs, self-references, cycles), `doing` tasks whose dependencies are not `done`, invalid `blocked_by` references (unknown question IDs), and stale index lines.
 
 ---
 
@@ -338,6 +339,8 @@ Tasks may declare machine-readable dependencies in `depends_on:` — a YAML list
 
 A task is **ready** when `status: todo` and every task in `depends_on` is `done`. The `next` operation picks among ready tasks.
 
+`depends_on` tracks prerequisite *tasks*; the separate optional `blocked_by: Q<N>` points at an open *question* (a decision) that gates the task. A task with an unanswered `blocked_by` stays `autonomy: human` and is not eligible for unattended execution.
+
 `sync` and `status` validate `depends_on`: unknown task IDs, self-references, and dependency cycles are frontmatter mismatches. `status` also flags `doing` tasks whose dependencies are not all `done`.
 
 ---
@@ -356,6 +359,7 @@ links: []               # optional related URLs or repo paths
 priority: p2            # optional: p1 | p2 | p3; treated as p2 when absent
 depends_on: []          # optional list of task IDs this task waits on, e.g. [T3, T7]
 verify: <command>       # optional: how to confirm completion independently; form depends on the repo
+blocked_by: Q<N>        # optional: an open question that gates this task; keep autonomy: human until it closes
 started: YYYY-MM-DD     # added by `claim`/`start`; kept on reopen as historical record
 claimed_by: who @ where # added by `claim`/`start`; attribution, not a lock
 closed: YYYY-MM-DD      # only when status = done; removed by `reopen`
@@ -383,7 +387,7 @@ Write the README in the same language as the project's documentation. It must in
 1. One-paragraph intro: this folder is a lightweight repo convention for both execution tasks and open questions using flat markdown + YAML frontmatter; item type is distinguished by the `type` frontmatter field.
 2. How it works: one file per item; frontmatter is the source of truth; `TASK_INDEX.md` is a derived view; tasks have stable `T<N>` identifiers.
 3. The four status values and what they mean for tasks vs questions (see table above).
-4. Type conventions: task vs question; what `owner` is for; what `links` is for; the optional `priority` field (`p1`/`p2`/`p3`, default `p2`); the optional `depends_on` list and the readiness rule (a task is ready when `todo` and all dependencies are `done`); the optional `verify:` field (how to confirm completion independently, form repo-dependent).
+4. Type conventions: task vs question; what `owner` is for; what `links` is for; the optional `priority` field (`p1`/`p2`/`p3`, default `p2`); the optional `depends_on` list and the readiness rule (a task is ready when `todo` and all dependencies are `done`); the optional `verify:` field (how to confirm completion independently, form repo-dependent); the optional `blocked_by:` field (a question id that gates the task).
 5. Task sizing guidance: one focused agent session or one coherent PR; split work with multiple outputs, owners, unresolved decisions, or "and then" sequencing. `Done when` must be independently checkable rather than a restatement of the work, and must include the adversarial/negative assertion for security-relevant tasks.
 6. Agent creation guidance: create tasks for user-approved plans, deferred follow-up work, blockers, ADR implementation work, and handoffs; do not create tasks merely to describe same-turn work.
 7. ADR and decision flow: `Q<N> -> ADR -> T<N>`, plus the reverse path when a task uncovers a durable decision; ADR-derived tasks link back to the ADR in `links:`.

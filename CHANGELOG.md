@@ -10,6 +10,7 @@ This project uses human-readable release notes.
 
 - `claim <item>` operation: record a claim (`claimed_by`, `started`, status `doing`) without beginning the work.
 - Optional `verify:` frontmatter field: how to confirm a task independently (form depends on the repo).
+- Optional `blocked_by:` frontmatter field: tie a task to the open question that gates it; the task stays `autonomy: human` until the question closes. `sync`/`status` and `opentasks-lint` flag unknown question references.
 
 ### Changed
 

@@ -23,6 +23,7 @@ This folder is a lightweight repo convention for tracking both execution tasks a
 - **Tasks** (`type: task`) track work. They carry an `id: T<N>`, a `deliverable` bucket, and optional `links:` to related URLs, repo paths, or ADRs.
 - **Questions** (`type: question`) track unresolved decisions. They carry an `owner` — the person or role who needs to answer.
 - `links:` records related issues, PRs, docs, branches, or ADR paths. ADR-derived tasks link back to their ADR here.
+- `blocked_by: Q<N>` (optional) ties a task to the open question that gates it; the task stays `autonomy: human` until that question closes.
 
 ## Task sizing
 

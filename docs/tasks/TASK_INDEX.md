@@ -9,7 +9,7 @@
 - [x] [T5. Add `graph` operation (Mermaid)](t5-add-graph-operation.md) — `done` → SKILL.md
 - [ ] [T11. Add `autonomy:` frontmatter field](t11-add-autonomy-field.md) — `todo` `p1`
 - [x] [T12. Make `Done when` independently verifiable; add `verify:` field](t12-verifiable-done-when.md) — `done` `p1` → SKILL.md
-- [ ] [T13. Add `blocked_by:` to tie a human task to its open decision](t13-add-blocked-by-field.md) — `todo`
+- [x] [T13. Add `blocked_by:` to tie a human task to its open decision](t13-add-blocked-by-field.md) — `done` → SKILL.md
 
 ## D2 — Lifecycle & tooling
 
@@ -39,7 +39,7 @@ graph TD
     T5["T5. Add graph operation (Mermaid)"]:::done
     T11["T11. Add autonomy: frontmatter field"]:::todo
     T12["T12. Make Done when independently verifiable; add verify: field"]:::done
-    T13["T13. Add blocked_by: to tie a human task to its open decision"]:::todo
+    T13["T13. Add blocked_by: to tie a human task to its open decision"]:::done
     T14["T14. Teach sync to derive curated sections instead of clobbering them"]:::todo
     T1 --> T3
     T2 --> T3

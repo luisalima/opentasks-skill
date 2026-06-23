@@ -18,6 +18,7 @@ PRIORITIES = {"p1", "p2", "p3"}
 TASK_FILE = re.compile(r"^t(\d+)-[a-z0-9-]+\.md$")
 QUESTION_FILE = re.compile(r"^q(\d+)-[a-z0-9-]+\.md$")
 TASK_ID = re.compile(r"^T(\d+)$")
+QUESTION_ID = re.compile(r"^[Qq](\d+)$")
 INDEX_LINE = re.compile(
     r"^- \[(?P<box>[ x])\] \[(?P<label>[^\]]+)\]\((?P<file>[^)]+)\) — `(?P<status>[a-z0-9]+)`"
 )
@@ -110,7 +111,21 @@ def check_items(folder, findings):
         else:
             findings.append(f"{name}: missing or unknown type {itype!r}")
     check_dependencies(items, task_ids, findings)
+    check_blocked_by(items, question_nums, findings)
     return items
+
+
+def check_blocked_by(items, question_nums, findings):
+    for name, fm in items.items():
+        raw = fm.get("blocked_by")
+        if raw is None:
+            continue
+        if not isinstance(raw, str):
+            findings.append(f"{name}: blocked_by must be a single question id like Q3")
+            continue
+        m = QUESTION_ID.match(raw)
+        if not m or m.group(1) not in question_nums:
+            findings.append(f"{name}: blocked_by references unknown question {raw!r}")
 
 
 def check_dependencies(items, task_ids, findings):
