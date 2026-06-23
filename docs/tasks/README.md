@@ -36,7 +36,7 @@ Split a task when it has multiple outputs, multiple owners, unresolved decisions
 
 ## When agents create tasks
 
-Agents should create tasks when breaking down a user-approved plan, discovering follow-up work that should not be done immediately, finding a blocker or dependency, extracting implementation work from an ADR, or leaving continuation work for another human or agent. Agents should not create tasks merely to describe work they are already completing in the same turn.
+Agents should create tasks when breaking down a user-approved plan, discovering follow-up work that should not be done immediately, finding a blocker or dependency, extracting implementation work from an ADR, or leaving continuation work for another human or agent. Agents should not create tasks merely to describe work they are already completing in the same turn. When a task is spawned from a review or a finding, record its source — the report path, PR, or finding id — in `links:` so the provenance is traceable.
 
 ## ADRs and decision flow
 

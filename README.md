@@ -173,7 +173,7 @@ and its line in the derived `TASK_INDEX.md`:
 
 ### Sizing, decisions, and ADRs
 
-A task should fit one focused agent session or one coherent PR; split work with multiple outputs, owners, or unresolved decisions ([task sizing and agent behavior](SKILL.md#task-sizing-and-agent-behavior)). Its `## Done when` must be independently checkable rather than a restatement of the work — and for security-relevant tasks must assert the adversarial/negative case (input rejected, request blocked), not only the happy path. Unresolved decisions become questions, durable decisions become ADRs, and execution becomes tasks — `Q<N> → ADR → T<N>` — with ADR-derived tasks linking back via `links:` ([ADRs and decision flow](SKILL.md#adrs-and-decision-flow)).
+A task should fit one focused agent session or one coherent PR; split work with multiple outputs, owners, or unresolved decisions ([task sizing and agent behavior](SKILL.md#task-sizing-and-agent-behavior)). Its `## Done when` must be independently checkable rather than a restatement of the work — and for security-relevant tasks must assert the adversarial/negative case (input rejected, request blocked), not only the happy path. Unresolved decisions become questions, durable decisions become ADRs, and execution becomes tasks — `Q<N> → ADR → T<N>` — with ADR-derived tasks linking back via `links:` — where tasks spawned from a review or finding also record their source (report path, PR, or finding id) ([ADRs and decision flow](SKILL.md#adrs-and-decision-flow)).
 
 ### Optional validation
 

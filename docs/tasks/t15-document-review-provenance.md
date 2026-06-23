@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 type: task
 id: T15
 deliverable: D3
@@ -7,6 +7,10 @@ created: 2026-06-20
 links:
   - docs/feedback/multi-agent-automation-feedback.md
 priority: p3
+started: 2026-06-23
+claimed_by: claude-code @ claude-the-tasks-folder
+closed: 2026-06-23
+output: SKILL.md
 ---
 
 # T15. Document recording provenance for review-spawned tasks

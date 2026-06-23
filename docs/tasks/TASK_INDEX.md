@@ -22,7 +22,7 @@
 - [x] [T8. Add `examples/` folder with a populated sample](t8-add-examples-folder.md) — `done` → examples/docs/tasks/
 - [x] [T9. Make SKILL.md canonical; slim the README](t9-canonicalize-skill-md.md) — `done` → README.md
 - [x] [T10. Document how to update an installed skill](t10-document-skill-updates.md) — `done` → README.md
-- [ ] [T15. Document recording provenance for review-spawned tasks](t15-document-review-provenance.md) — `todo` `p3`
+- [x] [T15. Document recording provenance for review-spawned tasks](t15-document-review-provenance.md) — `done` `p3` → SKILL.md
 
 ## Open questions
 
